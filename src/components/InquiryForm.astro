@@ -1,0 +1,494 @@
+---
+import { getCollection } from "astro:content";
+import Icon from "./Icon.astro";
+
+const pieces = (await getCollection("pieces"))
+	.sort((a, b) => a.data.index - b.data.index)
+	.slice(0, 7);
+---
+
+<form class="inquiry" id="inquiry" novalidate>
+	<!-- honeypot -->
+	<label class="hp" aria-hidden="true" tabindex="-1">
+		Don't fill this out: <input type="text" name="company" autocomplete="off" />
+	</label>
+
+	<fieldset class="field-group">
+		<legend class="mono">// IDENTITY</legend>
+		<div class="row">
+			<label class="field">
+				<span class="mono label">NAME</span>
+				<input type="text" name="name" required placeholder="your name" data-cursor="link" />
+			</label>
+			<label class="field">
+				<span class="mono label">EMAIL</span>
+				<input type="email" name="email" required placeholder="you@somewhere.net" data-cursor="link" />
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="field-group">
+		<legend class="mono">// REFERENCE</legend>
+		<p class="hint mono">Pick the closest existing piece — or "other."</p>
+		<div class="refs" role="radiogroup" aria-label="Reference piece">
+			{
+				pieces.map((piece) => (
+					<label class="ref">
+						<input
+							type="radio"
+							name="reference"
+							value={piece.id}
+							data-cursor="link"
+						/>
+						<span class="ref__inner">
+							<img class="ref__img" src={piece.data.heroImage} alt={piece.data.name} loading="lazy" />
+							<span class="ref__cap mono">
+								<span>/// {String(piece.data.index).padStart(2, "0")}</span>
+								<span>{piece.data.earStyle.toUpperCase()}</span>
+							</span>
+						</span>
+					</label>
+				))
+			}
+			<label class="ref ref--other">
+				<input type="radio" name="reference" value="other" data-cursor="link" />
+				<span class="ref__inner ref__inner--other">
+					<span class="display ref__other-title">OTHER</span>
+					<span class="mono ref__cap">FROM SCRATCH</span>
+				</span>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="field-group">
+		<legend class="mono">// SPEC</legend>
+		<div class="row row--3">
+			<label class="field">
+				<span class="mono label">SPECIES</span>
+				<select name="earStyle" required data-cursor="link">
+					<option value="">choose…</option>
+					<option value="Doberman">Doberman</option>
+					<option value="Dragon">Dragon</option>
+					<option value="Feline">Feline</option>
+					<option value="Hyena">Hyena</option>
+					<option value="Jolteon">Jolteon</option>
+					<option value="Other">Other — describe in notes</option>
+				</select>
+			</label>
+			<label class="field">
+				<span class="mono label">SIZE</span>
+				<select name="size" required data-cursor="link">
+					<option value="">choose…</option>
+					<option value="XS">XS</option>
+					<option value="S">S</option>
+					<option value="M">M</option>
+					<option value="L">L</option>
+					<option value="XL">XL</option>
+					<option value="XXL">XXL</option>
+				</select>
+			</label>
+			<label class="field">
+				<span class="mono label">DEADLINE</span>
+				<input type="date" name="deadline" data-cursor="link" />
+			</label>
+		</div>
+
+		<label class="field">
+			<span class="mono label">MODIFICATIONS / DETAILS</span>
+			<textarea
+				name="modifications"
+				rows="4"
+				placeholder="silhouette, ears or horns, hardware, weathering, stitching, references…"
+				data-cursor="link"></textarea>
+		</label>
+	</fieldset>
+
+	<fieldset class="field-group">
+		<legend class="mono">// BUDGET</legend>
+		<div class="budgets" role="radiogroup" aria-label="Budget tier">
+			<label class="budget">
+				<input type="radio" name="budget" value="under-250" data-cursor="link" />
+				<span><strong>UNDER €250</strong><em>simple modifications</em></span>
+			</label>
+			<label class="budget">
+				<input type="radio" name="budget" value="250-500" data-cursor="link" />
+				<span><strong>€250 – €500</strong><em>single piece, custom horn/ear</em></span>
+			</label>
+			<label class="budget">
+				<input type="radio" name="budget" value="500-1000" data-cursor="link" />
+				<span><strong>€500 – €1000</strong><em>full custom build</em></span>
+			</label>
+			<label class="budget">
+				<input type="radio" name="budget" value="open" data-cursor="link" />
+				<span><strong>OPEN</strong><em>let's talk</em></span>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="field-group">
+		<legend class="mono">// NOTES</legend>
+		<label class="field">
+			<textarea
+				name="notes"
+				rows="3"
+				placeholder="anything else we should know"
+				data-cursor="link"></textarea>
+		</label>
+	</fieldset>
+
+	<div class="submit-row">
+		<button type="submit" class="submit" data-cursor="link">
+			<span class="submit__label">SEND THE SUMMONS</span>
+			<Icon name="arrow-up-right" size={18} />
+		</button>
+		<p class="mono submit__note">
+			You'll hear back inside 48 hours. No payment up front.
+		</p>
+	</div>
+
+	<div class="result mono" id="inquiry-result" aria-live="polite" hidden></div>
+</form>
+
+<script>
+	function bindForm() {
+		const form = document.getElementById("inquiry") as HTMLFormElement | null;
+		const result = document.getElementById("inquiry-result");
+		if (!form || !result) return;
+
+		// hydrate ?ref= URL param if present
+		const params = new URLSearchParams(window.location.search);
+		const refParam = params.get("ref");
+		if (refParam) {
+			const refInput = form.querySelector<HTMLInputElement>(
+				`input[name="reference"][value="${CSS.escape(refParam)}"]`
+			);
+			if (refInput) refInput.checked = true;
+		}
+
+		form.addEventListener("submit", async (e) => {
+			e.preventDefault();
+			result.hidden = false;
+			result.textContent = "SENDING…";
+			result.removeAttribute("data-state");
+
+			const fd = new FormData(form);
+			const payload = Object.fromEntries(fd.entries());
+
+			try {
+				const res = await fetch("/api/inquiry", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(payload),
+				});
+				const data = (await res.json()) as { ok: boolean; error?: string };
+				if (!res.ok || !data.ok) {
+					throw new Error(data.error || "Could not send.");
+				}
+				result.setAttribute("data-state", "success");
+				result.textContent = "// SUMMONS RECEIVED. WE'LL BE IN TOUCH INSIDE 48 HOURS.";
+				form.reset();
+			} catch (err) {
+				result.setAttribute("data-state", "error");
+				result.textContent = `// FAILED — ${err instanceof Error ? err.message : "try again."}`;
+			}
+		});
+	}
+
+	bindForm();
+	document.addEventListener("astro:after-swap", bindForm);
+</script>
+
+<style>
+	.inquiry {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+		color: var(--ink);
+	}
+
+	.hp {
+		position: absolute;
+		left: -10000px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+	}
+
+	.field-group {
+		border: 0;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+
+	legend {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		padding: 0;
+		margin-bottom: var(--space-1);
+	}
+
+	.hint {
+		opacity: 0.5;
+		font-size: 0.65rem;
+		margin: 0 0 var(--space-1);
+	}
+
+	.row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-2);
+	}
+
+	.row--3 {
+		grid-template-columns: 1fr 1fr 1fr;
+	}
+
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.label {
+		font-size: 0.6rem;
+		opacity: 0.55;
+	}
+
+	input[type="text"],
+	input[type="email"],
+	input[type="date"],
+	select,
+	textarea {
+		font: inherit;
+		font-family: var(--font-body);
+		font-size: 0.95rem;
+		color: var(--ink);
+		background: transparent;
+		border: 0;
+		border-bottom: 1px solid var(--rule-strong);
+		padding: 0.55rem 0;
+		transition: border-color 0.25s ease;
+	}
+
+	textarea {
+		resize: vertical;
+		min-height: 4rem;
+	}
+
+	input::placeholder,
+	textarea::placeholder {
+		color: var(--ink);
+		opacity: 0.35;
+	}
+
+	input:focus,
+	select:focus,
+	textarea:focus {
+		border-color: var(--ink);
+		outline: none;
+	}
+
+	.refs {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.6rem;
+	}
+
+	.ref {
+		cursor: pointer;
+	}
+
+	.ref input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.ref__inner {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.4rem;
+		border: 1px solid var(--rule);
+		transition: border-color 0.25s ease, background 0.25s ease;
+	}
+
+	.ref:hover .ref__inner,
+	.ref input:focus-visible + .ref__inner {
+		border-color: var(--ink);
+	}
+
+	.ref input:checked + .ref__inner {
+		border-color: var(--ink);
+		background: var(--acid);
+	}
+
+	.ref__img {
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		object-position: center 28%;
+		display: block;
+	}
+
+	.ref__cap {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.55rem;
+		letter-spacing: 0.1em;
+		opacity: 0.7;
+	}
+
+	.ref__inner--other {
+		justify-content: center;
+		align-items: center;
+		aspect-ratio: 4 / 5;
+		text-align: center;
+		gap: 0.4rem;
+	}
+
+	.ref__other-title {
+		font-size: 1rem;
+		letter-spacing: 0.2em;
+	}
+
+	.budgets {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.6rem;
+	}
+
+	.budget {
+		cursor: pointer;
+	}
+
+	.budget input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.budget span {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.9rem 1rem;
+		border: 1px solid var(--rule);
+		transition: border-color 0.25s ease, background 0.25s ease;
+	}
+
+	.budget strong {
+		font-family: var(--font-display);
+		font-size: 0.78rem;
+		letter-spacing: 0.16em;
+		font-weight: 400;
+	}
+
+	.budget em {
+		font-style: normal;
+		font-family: var(--font-mono);
+		font-size: 0.6rem;
+		opacity: 0.6;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.budget:hover span {
+		border-color: var(--ink);
+	}
+
+	.budget input:checked + span {
+		border-color: var(--ink);
+		background: var(--ink);
+		color: var(--bone);
+	}
+
+	.budget input:checked + span em {
+		opacity: 0.7;
+	}
+
+	.submit-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: var(--space-2);
+		margin-top: var(--space-2);
+		flex-wrap: wrap;
+	}
+
+	.submit {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 1.1rem 2rem;
+		font-family: var(--font-display);
+		font-size: 0.78rem;
+		letter-spacing: 0.3em;
+		background: var(--ink);
+		color: var(--bone);
+		border: 1px solid var(--ink);
+		position: relative;
+		overflow: hidden;
+		transition: color 0.4s ease;
+	}
+
+	.submit::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--acid);
+		transform: translateY(101%);
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+		z-index: 0;
+	}
+
+	.submit > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.submit:hover {
+		color: var(--ink);
+	}
+
+	.submit:hover::before {
+		transform: translateY(0);
+	}
+
+	.submit__note {
+		opacity: 0.5;
+		font-size: 0.62rem;
+	}
+
+	.result {
+		padding: 0.9rem 1.2rem;
+		border: 1px solid var(--rule);
+		font-size: 0.7rem;
+	}
+
+	.result[data-state="success"] {
+		border-color: var(--acid-dim);
+		background: rgba(198, 255, 0, 0.12);
+	}
+
+	.result[data-state="error"] {
+		border-color: rgba(180, 30, 30, 0.6);
+		background: rgba(180, 30, 30, 0.06);
+	}
+
+	@media (max-width: 800px) {
+		.row,
+		.row--3 {
+			grid-template-columns: 1fr;
+		}
+		.refs {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.budgets {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

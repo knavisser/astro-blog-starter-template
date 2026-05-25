@@ -1,0 +1,44 @@
+---
+interface Props {
+	size?: number;
+	stroke?: number;
+	class?: string;
+}
+
+const { size = 120, stroke = 1, class: className = "" } = Astro.props;
+---
+
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 200 60"
+	width={size}
+	height={(size * 60) / 200}
+	fill="none"
+	stroke="currentColor"
+	stroke-width={stroke}
+	stroke-linecap="round"
+	class:list={["sigil sigil--cardinal", className]}
+	aria-hidden="true"
+>
+	<!-- horizontal rule with cardinal break -->
+	<path d="M0 30 L80 30" />
+	<path d="M120 30 L200 30" />
+	<!-- center cross -->
+	<path d="M100 18 L100 42" stroke-width={stroke * 1.4} />
+	<path d="M88 30 L112 30" stroke-width={stroke * 1.4} />
+	<!-- ticks -->
+	<path d="M70 26 L70 34" />
+	<path d="M130 26 L130 34" />
+	<!-- corner caps -->
+	<path d="M0 26 L0 34" stroke-width={stroke * 1.4} />
+	<path d="M200 26 L200 34" stroke-width={stroke * 1.4} />
+	<!-- small dots -->
+	<circle cx="55" cy="30" r="1.5" fill="currentColor" stroke="none" />
+	<circle cx="145" cy="30" r="1.5" fill="currentColor" stroke="none" />
+</svg>
+
+<style>
+	.sigil--cardinal {
+		display: inline-block;
+	}
+</style>

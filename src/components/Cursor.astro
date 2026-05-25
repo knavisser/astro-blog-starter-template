@@ -1,0 +1,95 @@
+---
+---
+
+<div id="cursor" aria-hidden="true">
+	<div class="cursor__dot"></div>
+	<div class="cursor__ring"></div>
+	<div class="cursor__label mono"></div>
+</div>
+
+<style>
+	#cursor {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 0;
+		height: 0;
+		pointer-events: none;
+		z-index: 9999;
+		mix-blend-mode: difference;
+		display: none;
+	}
+
+	.cursor__dot {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 6px;
+		height: 6px;
+		background: #ffffff;
+		border-radius: 50%;
+		transform: translate(-50%, -50%);
+		transition: opacity 0.2s ease;
+	}
+
+	.cursor__ring {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 36px;
+		height: 36px;
+		border: 1px solid #ffffff;
+		border-radius: 50%;
+		transform: translate(-50%, -50%) scale(1);
+		transition:
+			transform 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
+			width 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
+			height 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
+			border-radius 0.4s cubic-bezier(0.2, 0.7, 0.1, 1),
+			background 0.3s ease;
+		will-change: transform;
+	}
+
+	.cursor__label {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform: translate(-50%, -50%);
+		color: #ffffff;
+		font-size: 0.6rem;
+		letter-spacing: 0.12em;
+		opacity: 0;
+		transition: opacity 0.3s ease;
+		white-space: nowrap;
+	}
+
+	#cursor[data-state="zoom"] .cursor__ring {
+		width: 80px;
+		height: 80px;
+	}
+
+	#cursor[data-state="zoom"] .cursor__label {
+		opacity: 1;
+	}
+
+	#cursor[data-state="link"] .cursor__ring {
+		width: 56px;
+		height: 56px;
+	}
+
+	#cursor[data-state="drag"] .cursor__ring {
+		width: 64px;
+		height: 64px;
+		border-radius: 4px;
+	}
+
+	#cursor[data-state="drag"] .cursor__label {
+		opacity: 1;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		#cursor {
+			display: block;
+		}
+	}
+</style>

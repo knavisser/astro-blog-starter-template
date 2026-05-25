@@ -1,0 +1,57 @@
+---
+interface Props {
+	size?: number;
+	stroke?: number;
+	class?: string;
+}
+
+const { size = 120, stroke = 1.25, class: className = "" } = Astro.props;
+---
+
+<svg
+	xmlns="http://www.w3.org/2000/svg"
+	viewBox="0 0 120 160"
+	width={size}
+	height={(size * 160) / 120}
+	fill="none"
+	stroke="currentColor"
+	stroke-width={stroke}
+	stroke-linecap="round"
+	stroke-linejoin="round"
+	class:list={["sigil sigil--wirehorn", className]}
+	aria-hidden="true"
+>
+	<!-- left horn -->
+	<path d="M30 150 C 24 110 18 70 12 18" />
+	<path d="M30 150 C 36 110 38 70 38 18" />
+	<path d="M12 18 L38 18" />
+	<!-- left horn ribs -->
+	<path d="M27 130 L36 130" opacity="0.6" />
+	<path d="M24 110 L36 110" opacity="0.6" />
+	<path d="M21 86 L35 86" opacity="0.55" />
+	<path d="M18 60 L33 60" opacity="0.5" />
+	<path d="M14 36 L36 36" opacity="0.5" />
+
+	<!-- right horn -->
+	<path d="M90 150 C 84 110 82 70 82 18" />
+	<path d="M90 150 C 96 110 102 70 108 18" />
+	<path d="M82 18 L108 18" />
+	<!-- right horn ribs -->
+	<path d="M84 130 L93 130" opacity="0.6" />
+	<path d="M84 110 L96 110" opacity="0.6" />
+	<path d="M85 86 L99 86" opacity="0.55" />
+	<path d="M87 60 L102 60" opacity="0.5" />
+	<path d="M84 36 L106 36" opacity="0.5" />
+
+	<!-- hood base line -->
+	<path d="M0 150 L120 150" opacity="0.4" />
+	<!-- center mark -->
+	<path d="M58 142 L62 150 L58 158" opacity="0.5" />
+	<path d="M62 142 L58 150 L62 158" opacity="0.5" />
+</svg>
+
+<style>
+	.sigil--wirehorn {
+		display: inline-block;
+	}
+</style>

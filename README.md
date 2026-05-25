@@ -1,64 +1,91 @@
-# Astro Starter Kit: Blog
+# bad juju
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/astro-blog-starter-template)
+Marketing site for **bad juju** — one of one, made-to-order hoodies stitched with ears, horns, and other modifications. Built on Astro 5 + Cloudflare Workers.
 
-![Astro Template Preview](https://github.com/withastro/astro/assets/2244813/ff10799f-a816-4703-b967-c78997e8323d)
+> "bad juju" is a working name placeholder. Swap it globally in [src/consts.ts](src/consts.ts) when the real name lands.
 
-<!-- dash-content-start -->
+## Stack
 
-Create a blog with Astro and deploy it on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+- **Astro 5** with the **Cloudflare Workers** adapter
+- **Content collections** drive `/portfolio` and the featured slider — each hoodie is one markdown file in `src/content/pieces/`
+- **Self-hosted Google Fonts** via `@fontsource` — Michroma (display), Space Grotesk (body), Space Mono (system)
+- **astro-icon + Tabler** for utility icons
+- **Lenis** for smooth scroll
+- **Native View Transitions** for page navigation
+- **Custom CSS cursor** with `mix-blend-mode: difference`
+- **Inquiry form** posts to a Cloudflare Worker endpoint at `/api/inquiry` and (optionally) sends email via [Resend](https://resend.com)
 
-Features:
+All animations honor `prefers-reduced-motion`.
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and OpenGraph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-- ✅ Built-in Observability logging
-
-<!-- dash-content-end -->
-
-## Getting Started
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+## Local development
 
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/astro-blog-starter-template
+npm install
+npm run dev    # http://localhost:4321
 ```
 
-A live public deployment of this template is available at [https://astro-blog-starter-template.templates.workers.dev](https://astro-blog-starter-template.templates.workers.dev)
+## Routes
 
-## 🚀 Project Structure
+- `/` — single-scroll marketing page (hero, manifesto, featured drop slider, process, lookbook, summon CTA)
+- `/portfolio` — full archive grid
+- `/portfolio/[slug]` — individual piece detail page
+- `/contact` — inquiry form + atelier info
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Adding a new piece
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Create a markdown file in `src/content/pieces/` following the existing schema in [src/content.config.ts](src/content.config.ts):
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+```md
+---
+name: "OBJECT 008 — MOON HORN"
+index: 8
+earStyle: bunny       # demon | bunny | fox | cat | custom
+materials:
+  - "..."
+heroImage: "/images/your-new-photo.jpg"
+summary: "one-line description used in cards and meta tags"
+status: featured      # featured | available | archive
+dateCompleted: 2026-05-20
+---
 
-Any static assets, like images, can be placed in the `public/` directory.
+Long-form body copy goes here.
+```
 
-## 🧞 Commands
+Drop the photo into `public/images/`. The slug is the filename (`008-moon-horn.md` → `/portfolio/008-moon-horn`).
 
-All commands are run from the root of the project, from a terminal:
+Mark `status: featured` or `status: available` to surface a piece in the home page slider.
+
+## Wiring up real email (optional)
+
+The inquiry form already works in dev — every submission is logged via `console.log` so you can see it with `npx wrangler tail` after deploying. To send real emails on submission:
+
+1. Sign up at [resend.com](https://resend.com), grab an API key
+2. Add as a Wrangler secret:
+   ```bash
+   npx wrangler secret put RESEND_API_KEY
+   npx wrangler secret put INQUIRY_TO_EMAIL     # e.g. you@yourdomain.com
+   npx wrangler secret put INQUIRY_FROM_EMAIL   # e.g. "bad juju <inquiry@yourdomain.com>"
+   ```
+3. For local dev, you can set these in `.dev.vars` (gitignored).
+
+The endpoint also accepts a honeypot field (`company`) to filter bots.
+
+## Things to swap before launch
+
+- [src/consts.ts](src/consts.ts) — site title, description, atelier coords, contact email, Instagram URL
+- [public/favicon.svg](public/favicon.svg) — currently the Astro default
+- All copy in the home sections — they're written in-voice as placeholders, not Lorem ipsum, but they're still placeholder
+- The 7 piece markdown files in `src/content/pieces/` — names, descriptions, materials
+- `astro.config.mjs` `site:` URL — currently `https://example.com`
+
+## Commands
 
 | Command                           | Action                                           |
 | :-------------------------------- | :----------------------------------------------- |
-| `npm install`                     | Installs dependencies                            |
-| `npm run dev`                     | Starts local dev server at `localhost:4321`      |
-| `npm run build`                   | Build your production site to `./dist/`          |
-| `npm run preview`                 | Preview your build locally, before deploying     |
-| `npm run astro ...`               | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help`         | Get help using the Astro CLI                     |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare        |
-| `npm wrangler tail`               | View real-time logs for all Workers              |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+| `npm install`                     | Install dependencies                             |
+| `npm run dev`                     | Start local dev server at `localhost:4321`       |
+| `npm run build`                   | Build the production site to `./dist/`           |
+| `npm run preview`                 | Preview the build locally via Wrangler           |
+| `npm run check`                   | Build + TS check + Wrangler dry-run              |
+| `npm run deploy`                  | Deploy to Cloudflare Workers                     |
+| `npx wrangler tail`               | Stream live logs (see inquiry submissions)       |

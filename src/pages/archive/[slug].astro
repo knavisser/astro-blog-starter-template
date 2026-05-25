@@ -1,0 +1,175 @@
+---
+import Base from "../../layouts/Base.astro";
+import { getCollection } from "astro:content";
+import type { GetStaticPaths } from "astro";
+import Icon from "../../components/Icon.astro";
+
+export const getStaticPaths: GetStaticPaths = async () => {
+	const pieces = await getCollection("pieces");
+	return pieces.map((piece) => ({
+		params: { slug: piece.id },
+		props: { piece },
+	}));
+};
+
+const { piece } = Astro.props;
+const { data } = piece;
+const completed = data.dateCompleted
+	? data.dateCompleted.toISOString().slice(0, 10)
+	: null;
+---
+
+<Base title={data.name} description={data.summary} image={data.heroImage}>
+	<article class="piece">
+		<a class="back mono" href="/archive" data-cursor="link">
+			<Icon name="arrow-left" size={14} />
+			<span>BACK TO ARCHIVE</span>
+		</a>
+
+		<section class="lead">
+			<div class="lead__inner">
+				<p class="mono kicker">/// OBJECT {String(data.index).padStart(3, "0")}</p>
+				<h1 class="display name">{data.name}</h1>
+				<p class="summary">{data.summary}</p>
+
+				<dl class="spec mono">
+					<div>
+						<dt>// STATUS</dt>
+						<dd>{data.status.toUpperCase()}</dd>
+					</div>
+					<div>
+						<dt>// SPECIES</dt>
+						<dd>{data.earStyle.toUpperCase()}</dd>
+					</div>
+					{
+						completed && (
+							<div>
+								<dt>// COMPLETED</dt>
+								<dd>{completed}</dd>
+							</div>
+						)
+					}
+					<div>
+						<dt>// MATERIALS</dt>
+						<dd>
+							{data.materials.map((m: string, i: number) => (
+								<span>{m}{i < data.materials.length - 1 ? " · " : ""}</span>
+							))}
+						</dd>
+					</div>
+				</dl>
+			</div>
+
+			<figure class="lead__figure">
+				<img src={data.heroImage} alt={data.name} fetchpriority="high" />
+			</figure>
+		</section>
+	</article>
+</Base>
+
+<style>
+	.piece {
+		background: var(--bone);
+		color: var(--ink);
+		padding-top: calc(var(--header-h) + var(--space-4));
+		min-height: 100dvh;
+		padding-bottom: var(--space-6);
+	}
+
+	.back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin: 0 var(--gutter) var(--space-4);
+		padding: 0.55rem 0.85rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.18em;
+		border: 1px solid var(--rule-strong);
+		color: var(--ink);
+		transition: background 0.25s ease, color 0.25s ease;
+	}
+
+	.back:hover {
+		background: var(--ink);
+		color: var(--bone);
+	}
+
+	.lead {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--space-5);
+		max-width: var(--max-w);
+		margin: 0 auto;
+		padding: var(--space-3) var(--gutter) var(--space-5);
+		align-items: center;
+	}
+
+	.lead__inner {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.kicker {
+		opacity: 0.55;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.name {
+		margin: 0;
+		font-size: clamp(2rem, 5vw, 4.5rem);
+		letter-spacing: 0.08em;
+		line-height: 0.95;
+	}
+
+	.summary {
+		font-size: 1.05rem;
+		line-height: 1.55;
+		opacity: 0.78;
+		margin: 0;
+		max-width: 48ch;
+	}
+
+	.spec {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: var(--space-3);
+		margin: var(--space-3) 0 0;
+		font-size: 0.7rem;
+	}
+
+	.spec dt {
+		opacity: 0.4;
+		margin-bottom: 0.3rem;
+	}
+
+	.spec dd {
+		margin: 0;
+		letter-spacing: 0.08em;
+	}
+
+	.lead__figure {
+		margin: 0;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--chrome-1);
+	}
+
+	.lead__figure img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+	}
+
+	@media (max-width: 800px) {
+		.lead {
+			grid-template-columns: 1fr;
+			padding-top: var(--space-3);
+		}
+		.spec {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+</style>

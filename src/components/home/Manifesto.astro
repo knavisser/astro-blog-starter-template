@@ -1,0 +1,155 @@
+---
+import WireHorn from "../sigils/WireHorn.astro";
+import BarcodeBlock from "../sigils/BarcodeBlock.astro";
+---
+
+<section class="manifesto" id="manifesto">
+	<div class="manifesto__top mono" data-reveal>
+		<span>// I. MANIFESTO</span>
+		<span>EST. 2026</span>
+	</div>
+
+	<div class="manifesto__body" data-reveal-stagger>
+		<p class="display line line-1">
+			ONE <em>of</em> ONE
+		</p>
+		<p class="display line line-2">
+			HOODIES.
+		</p>
+		<p class="display line line-3">
+			BRING <em>out your</em>
+		</p>
+		<p class="display line line-4">
+			INNER BEAST<span class="acid">.</span>
+		</p>
+	</div>
+
+	<aside class="manifesto__side">
+		<WireHorn size={120} class="horn" />
+		<p class="mono note" data-reveal>
+			BAD JUJU IS A SMALL ATELIER. EVERY PIECE IS CUT, STITCHED, AND SUMMONED BY HAND.
+		</p>
+		<BarcodeBlock size={120} seed="BJ-CYCLE-I" class="bar" />
+		<p class="mono code">REF // BJ-CYCLE-I-2026</p>
+	</aside>
+</section>
+
+<style>
+	.manifesto {
+		position: relative;
+		padding: var(--space-8) var(--gutter) var(--space-7);
+		background: var(--bone);
+		color: var(--ink);
+		display: grid;
+		grid-template-columns: 6fr 1fr;
+		gap: var(--space-5);
+		max-width: var(--max-w);
+		margin: 0 auto;
+	}
+
+	.manifesto__top {
+		grid-column: 1 / -1;
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.7rem;
+		opacity: 0.5;
+		padding-bottom: var(--space-3);
+		border-bottom: 1px solid var(--rule);
+		margin-bottom: var(--space-4);
+	}
+
+	.manifesto__body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1em;
+	}
+
+	.line {
+		margin: 0;
+		font-size: clamp(2.4rem, 9vw, 8.5rem);
+		letter-spacing: 0.04em;
+		line-height: 0.92;
+		font-style: normal;
+	}
+
+	.line em {
+		font-family: var(--font-body);
+		font-style: italic;
+		font-weight: 300;
+		font-size: 0.55em;
+		letter-spacing: 0.01em;
+		opacity: 0.65;
+		padding: 0 0.2em;
+		vertical-align: 0.18em;
+		text-transform: lowercase;
+	}
+
+	.line .acid {
+		color: var(--acid-dim);
+	}
+
+	.line-2 {
+		padding-left: 1.2em;
+	}
+
+	.line-3 {
+		padding-left: 0.4em;
+	}
+
+	.line-4 {
+		padding-left: 1.8em;
+		color: var(--chrome-3);
+	}
+
+	.manifesto__side {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		align-items: flex-start;
+		padding-top: 1rem;
+	}
+
+	:global(.manifesto__side .horn) {
+		color: var(--ink);
+		opacity: 0.85;
+	}
+
+	:global(.manifesto__side .bar) {
+		color: var(--ink);
+		opacity: 0.7;
+		width: 100%;
+		max-width: 140px;
+	}
+
+	.note {
+		font-size: 0.68rem;
+		line-height: 1.55;
+		max-width: 17ch;
+		opacity: 0.7;
+		letter-spacing: 0.04em;
+	}
+
+	.code {
+		font-size: 0.55rem;
+		opacity: 0.5;
+	}
+
+	@media (max-width: 800px) {
+		.manifesto {
+			grid-template-columns: 1fr;
+			padding-block: var(--space-6) var(--space-5);
+		}
+		.note {
+			max-width: 34ch;
+		}
+		.line-2 {
+			padding-left: 0.4em;
+		}
+		.line-3 {
+			padding-left: 0;
+		}
+		.line-4 {
+			padding-left: 0.6em;
+		}
+	}
+</style>

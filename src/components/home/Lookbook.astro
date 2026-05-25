@@ -1,0 +1,189 @@
+---
+const looks = [
+	{
+		image: "/images/hoodie4.jpg",
+		caption: "OBJECT 004 — VENOM PAW",
+		caption2: "ACID-WASH FLEECE · CAT EARS · INNER ROSE LINING",
+		layout: "full",
+	},
+	{
+		image: "/images/hoodie7.jpg",
+		caption: "OBJECT 007 — STATIC HORN",
+		caption2: "GRAPHITE STATIC DYE · TWISTED HORN",
+		layout: "left",
+	},
+	{
+		image: "/images/hoodie1.jpg",
+		caption: "OBJECT 001 — YELLOW STRIKE",
+		caption2: "CAUTION PANEL · SINGLE HORN · M SIGIL",
+		layout: "right",
+	},
+	{
+		image: "/images/hoodie5.jpg",
+		caption: "OBJECT 005 — ICARUS DECOY",
+		caption2: "BLEACH SCRUB · YELLOW WING · LONG HORN",
+		layout: "full",
+	},
+];
+---
+
+<section class="lookbook" id="lookbook">
+	<header class="lookbook__head">
+		<p class="mono kicker" data-reveal>// V. LOOKBOOK</p>
+		<h2 class="display title" data-reveal>WORN · IN · THE · WILD</h2>
+	</header>
+
+	<div class="lookbook__stack">
+		{
+			looks.map((look, i) => (
+				<figure
+					class:list={["look", `look--${look.layout}`]}
+					data-reveal
+					style={`--i: ${i}`}
+				>
+					<div class="look__img-wrap">
+						<img class="look__img" src={look.image} alt={look.caption} loading="lazy" />
+					</div>
+					<figcaption class="look__cap mono">
+						<span class="look__no">/// {String(i + 1).padStart(2, "0")}</span>
+						<span class="look__name">{look.caption}</span>
+						<span class="look__sub">{look.caption2}</span>
+					</figcaption>
+				</figure>
+			))
+		}
+	</div>
+</section>
+
+<style>
+	.lookbook {
+		background: var(--bone);
+		color: var(--ink);
+		padding: var(--space-7) var(--gutter);
+	}
+
+	.lookbook__head {
+		max-width: var(--max-w);
+		margin: 0 auto var(--space-6);
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.kicker {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2rem, 5.5vw, 4.5rem);
+		letter-spacing: 0.1em;
+	}
+
+	.lookbook__stack {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-7);
+		max-width: var(--max-w);
+		margin: 0 auto;
+	}
+
+	.look {
+		margin: 0;
+		display: grid;
+		gap: var(--space-3);
+	}
+
+	.look--full {
+		grid-template-columns: 1fr;
+	}
+
+	.look--left {
+		grid-template-columns: 2fr 1fr;
+		align-items: end;
+	}
+
+	.look--right {
+		grid-template-columns: 1fr 2fr;
+		align-items: start;
+	}
+
+	.look--right .look__cap {
+		order: -1;
+	}
+
+	.look__img-wrap {
+		overflow: hidden;
+		background: var(--chrome-1);
+		aspect-ratio: 4 / 5;
+		clip-path: inset(8% 8% 8% 8%);
+		transition: clip-path 1.4s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.look--full .look__img-wrap {
+		aspect-ratio: 21 / 9;
+	}
+
+	[data-reveal].is-revealed .look__img-wrap {
+		clip-path: inset(0% 0% 0% 0%);
+	}
+
+	.look__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+		filter: saturate(0.96) contrast(1.04);
+		transform: scale(1.04);
+		transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	[data-reveal].is-revealed .look__img {
+		transform: scale(1);
+	}
+
+	.look__cap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: var(--space-2) 0;
+		font-size: 0.7rem;
+		letter-spacing: 0.1em;
+	}
+
+	.look__no {
+		opacity: 0.5;
+	}
+
+	.look__name {
+		font-family: var(--font-display);
+		font-size: clamp(0.95rem, 1.4vw, 1.4rem);
+		letter-spacing: 0.18em;
+	}
+
+	.look__sub {
+		opacity: 0.55;
+		font-size: 0.65rem;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.look__img-wrap,
+		.look__img {
+			transition: none;
+			clip-path: inset(0);
+			transform: none;
+		}
+	}
+
+	@media (max-width: 800px) {
+		.look--left,
+		.look--right {
+			grid-template-columns: 1fr;
+		}
+		.look--right .look__cap {
+			order: 0;
+		}
+	}
+</style>

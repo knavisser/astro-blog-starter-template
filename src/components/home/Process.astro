@@ -1,0 +1,166 @@
+---
+import Cardinal from "../sigils/Cardinal.astro";
+
+const steps = [
+	{
+		numeral: "I",
+		label: "BASE",
+		image: "/images/hoodie6.jpg",
+		body:
+			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+	},
+	{
+		numeral: "II",
+		label: "CRAFT",
+		image: "/images/hoodie5.jpg",
+		body:
+			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure.",
+	},
+	{
+		numeral: "III",
+		label: "SUMMONED",
+		image: "/images/hoodie3.jpg",
+		body:
+			"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim.",
+	},
+];
+---
+
+<section class="process" id="process">
+	<header class="process__head">
+		<p class="mono kicker" data-reveal>// III. PROCESS</p>
+		<h2 class="display title" data-reveal>HOW <em>it</em> IS MADE</h2>
+		<Cardinal size={220} class="divider" />
+	</header>
+
+	<ol class="process__grid">
+		{
+			steps.map((step) => (
+				<li class="step" data-reveal>
+					<figure class="step__figure">
+						<img src={step.image} alt={`${step.label} stage`} loading="lazy" />
+					</figure>
+					<div class="step__body">
+						<div class="step__head">
+							<span class="display step__numeral">{step.numeral}</span>
+							<span class="mono step__label">// {step.label}</span>
+						</div>
+						<p class="step__copy">{step.body}</p>
+					</div>
+				</li>
+			))
+		}
+	</ol>
+</section>
+
+<style>
+	.process {
+		background: var(--bone-2);
+		color: var(--ink);
+		padding: var(--space-7) var(--gutter);
+	}
+
+	.process__head {
+		max-width: var(--max-w);
+		margin: 0 auto var(--space-6);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-2);
+	}
+
+	.kicker {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2rem, 5.5vw, 4.5rem);
+		letter-spacing: 0.05em;
+	}
+
+	.title em {
+		font-family: var(--font-body);
+		font-style: italic;
+		font-weight: 300;
+		font-size: 0.55em;
+		opacity: 0.65;
+		text-transform: lowercase;
+		padding: 0 0.2em;
+		vertical-align: 0.18em;
+	}
+
+	:global(.process__head .divider) {
+		color: var(--chrome-3);
+		opacity: 0.6;
+		margin-top: var(--space-3);
+	}
+
+	.process__grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: var(--space-5);
+		max-width: var(--max-w);
+		margin-inline: auto;
+	}
+
+	.step {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+	}
+
+	.step__figure {
+		margin: 0;
+		aspect-ratio: 3 / 4;
+		overflow: hidden;
+		background: var(--chrome-1);
+	}
+
+	.step__figure img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+		filter: grayscale(0.3) contrast(1.04);
+	}
+
+	.step__head {
+		display: flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		border-bottom: 1px solid var(--rule);
+		padding-bottom: 0.8rem;
+	}
+
+	.step__numeral {
+		font-size: clamp(2rem, 3.2vw, 2.8rem);
+		letter-spacing: 0.1em;
+	}
+
+	.step__label {
+		font-size: 0.72rem;
+		opacity: 0.55;
+	}
+
+	.step__copy {
+		font-size: 0.95rem;
+		line-height: 1.55;
+		opacity: 0.82;
+		margin: 0;
+		max-width: 36ch;
+	}
+
+	@media (max-width: 800px) {
+		.process__grid {
+			grid-template-columns: 1fr;
+			gap: var(--space-6);
+		}
+	}
+</style>

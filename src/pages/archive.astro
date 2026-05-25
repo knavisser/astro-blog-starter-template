@@ -1,0 +1,280 @@
+---
+import Base from "../layouts/Base.astro";
+import { getCollection } from "astro:content";
+import Cardinal from "../components/sigils/Cardinal.astro";
+
+const pieces = (await getCollection("pieces")).sort(
+	(a, b) => a.data.index - b.data.index
+);
+
+const stats = {
+	total: pieces.length,
+	available: pieces.filter((p) => p.data.status === "available").length,
+	archive: pieces.filter((p) => p.data.status === "archive").length,
+};
+---
+
+<Base
+	title="archive"
+	description="every piece. one of one. archived, available, and incoming."
+>
+	<section class="hero-strip">
+		<div class="hero-strip__inner">
+			<p class="mono kicker" data-reveal>// PORTFOLIO · ARCHIVE</p>
+			<h1 class="display title" data-reveal>EVERY · PIECE · EVER</h1>
+			<p class="lede" data-reveal>
+				A running record of every hoodie made. One of one means no two are alike —
+				past pieces inform new ones by inquiry.
+			</p>
+
+			<dl class="stats mono" data-reveal-stagger>
+				<div>
+					<dt>// TOTAL</dt>
+					<dd>{String(stats.total).padStart(3, "0")}</dd>
+				</div>
+				<div>
+					<dt>// AVAILABLE</dt>
+					<dd>{String(stats.available).padStart(3, "0")}</dd>
+				</div>
+				<div>
+					<dt>// ARCHIVED</dt>
+					<dd>{String(stats.archive).padStart(3, "0")}</dd>
+				</div>
+			</dl>
+
+			<Cardinal size={220} class="divider" />
+		</div>
+	</section>
+
+	<section class="grid-wrap">
+		<ol class="grid">
+			{
+				pieces.map((piece, i) => (
+					<li
+						class:list={["tile", { "tile--tall": i % 3 === 1, "tile--wide": i % 5 === 4 }]}
+					>
+						<a class="tile__link" href={`/archive/${piece.id}`} data-cursor="zoom" data-cursor-label="VIEW">
+							<figure class="tile__figure">
+								<img
+									class="tile__img"
+									src={piece.data.heroImage}
+									alt={piece.data.name}
+									loading={i < 3 ? "eager" : "lazy"}
+								/>
+								<span class:list={["mono", "tile__status", `is-${piece.data.status}`]}>
+									{piece.data.status.toUpperCase()}
+								</span>
+							</figure>
+							<div class="tile__caption mono">
+								<span class="tile__idx">/// {String(piece.data.index).padStart(3, "0")}</span>
+								<span class="tile__name">{piece.data.name}</span>
+								<span class="tile__sub">{piece.data.earStyle.toUpperCase()} · DIY STITCH</span>
+							</div>
+						</a>
+					</li>
+				))
+			}
+		</ol>
+	</section>
+</Base>
+
+<style>
+	.hero-strip {
+		padding: calc(var(--header-h) + var(--space-6)) var(--gutter) var(--space-5);
+		background: var(--bone);
+	}
+
+	.hero-strip__inner {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-2);
+	}
+
+	.kicker {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2.4rem, 7vw, 6rem);
+		letter-spacing: 0.06em;
+	}
+
+	.lede {
+		max-width: 52ch;
+		font-size: 0.95rem;
+		opacity: 0.7;
+		margin: 0;
+		line-height: 1.55;
+	}
+
+	.stats {
+		display: flex;
+		gap: var(--space-5);
+		margin: var(--space-4) 0 0;
+		font-size: 0.7rem;
+		padding: 0;
+	}
+
+	.stats > div {
+		text-align: center;
+	}
+
+	.stats dt {
+		opacity: 0.45;
+		margin-bottom: 0.3rem;
+	}
+
+	.stats dd {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.3rem;
+		letter-spacing: 0.12em;
+	}
+
+	:global(.hero-strip .divider) {
+		color: var(--chrome-3);
+		opacity: 0.6;
+		margin-top: var(--space-3);
+	}
+
+	.grid-wrap {
+		padding: var(--space-5) var(--gutter) var(--space-8);
+		background: var(--bone);
+	}
+
+	.grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		max-width: var(--max-w);
+		margin-inline: auto;
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
+		gap: var(--space-3);
+		grid-auto-flow: dense;
+	}
+
+	.tile {
+		grid-column: span 2;
+	}
+
+	.tile--tall {
+		grid-row: span 2;
+	}
+
+	.tile--wide {
+		grid-column: span 3;
+	}
+
+	.tile__link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		height: 100%;
+	}
+
+	.tile__figure {
+		position: relative;
+		margin: 0;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--chrome-1);
+		flex: 1;
+	}
+
+	.tile--tall .tile__figure {
+		aspect-ratio: 4 / 7;
+	}
+
+	.tile--wide .tile__figure {
+		aspect-ratio: 21 / 12;
+	}
+
+	.tile__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.tile:hover .tile__img {
+		transform: scale(1.05);
+	}
+
+	.tile__status {
+		position: absolute;
+		top: 0.7rem;
+		left: 0.7rem;
+		font-size: 0.55rem;
+		padding: 0.25rem 0.55rem;
+		background: rgba(244, 241, 236, 0.92);
+		color: var(--ink);
+		letter-spacing: 0.18em;
+		border: 1px solid rgba(10, 9, 8, 0.1);
+	}
+
+	.tile__status.is-available {
+		background: var(--acid);
+		color: var(--ink);
+	}
+
+	.tile__status.is-archive {
+		background: rgba(10, 9, 8, 0.85);
+		color: var(--bone);
+	}
+
+	.tile__caption {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: 0.7rem;
+		letter-spacing: 0.08em;
+	}
+
+	.tile__idx {
+		opacity: 0.5;
+		font-size: 0.6rem;
+	}
+
+	.tile__name {
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		letter-spacing: 0.16em;
+	}
+
+	.tile__sub {
+		opacity: 0.55;
+		font-size: 0.6rem;
+	}
+
+	@media (max-width: 1100px) {
+		.grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	@media (max-width: 720px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.tile {
+			grid-column: span 1;
+		}
+		.tile--wide,
+		.tile--tall {
+			grid-column: span 2;
+			grid-row: auto;
+		}
+		.stats {
+			gap: var(--space-3);
+		}
+	}
+</style>

@@ -1,0 +1,187 @@
+---
+import Base from "../layouts/Base.astro";
+import InquiryForm from "../components/InquiryForm.astro";
+import CrossCircle from "../components/sigils/CrossCircle.astro";
+import BarcodeBlock from "../components/sigils/BarcodeBlock.astro";
+import {
+	CONTACT_EMAIL,
+	INSTAGRAM_HANDLE,
+	INSTAGRAM_URL,
+	ATELIER_COORDS,
+	ATELIER_LABEL,
+} from "../consts";
+---
+
+<Base title="contact" description="summon a piece. start a conversation.">
+	<section class="contact" id="summon">
+		<div class="contact__left">
+			<div class="left__sticky">
+				<CrossCircle size={72} class="sigil" animated />
+				<p class="mono kicker" data-reveal>// VI. SUMMONS</p>
+				<h1 class="display title" data-reveal>
+					<span class="row">SUMMON</span>
+					<span class="row row--right"><em>your</em></span>
+					<span class="row">PIECE.</span>
+				</h1>
+
+				<p class="lede" data-reveal>
+					Tell us about the silhouette, the dye, the horns, the weather it's
+					built for. We'll quote inside 48 hours.
+				</p>
+
+				<dl class="reach mono" data-reveal-stagger>
+					<div>
+						<dt>// EMAIL</dt>
+						<dd>
+							<a href={`mailto:${CONTACT_EMAIL}`} data-cursor="link">{CONTACT_EMAIL}</a>
+						</dd>
+					</div>
+					<div>
+						<dt>// INSTAGRAM</dt>
+						<dd>
+							<a href={INSTAGRAM_URL} target="_blank" rel="noopener" data-cursor="link"
+								>{INSTAGRAM_HANDLE}</a
+							>
+						</dd>
+					</div>
+					<div>
+						<dt>// ATELIER</dt>
+						<dd>{ATELIER_LABEL}<br />{ATELIER_COORDS}</dd>
+					</div>
+				</dl>
+
+				<BarcodeBlock size={180} seed="BJ-INQUIRY-2026" class="bar" />
+			</div>
+		</div>
+
+		<div class="contact__right">
+			<InquiryForm />
+		</div>
+	</section>
+</Base>
+
+<style>
+	.contact {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0;
+		min-height: 100dvh;
+		padding-top: var(--header-h);
+		background: var(--bone);
+	}
+
+	.contact__left {
+		padding: var(--space-7) var(--gutter) var(--space-6);
+		background: var(--ink);
+		color: var(--bone);
+	}
+
+	.left__sticky {
+		position: sticky;
+		top: calc(var(--header-h) + var(--space-3));
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		max-width: 480px;
+	}
+
+	:global(.contact__left .sigil) {
+		color: var(--acid);
+		margin-bottom: var(--space-2);
+	}
+
+	.kicker {
+		opacity: 0.55;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.title {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.05em;
+		line-height: 0.92;
+	}
+
+	.row {
+		font-size: clamp(2.5rem, 6.5vw, 5rem);
+		letter-spacing: 0.06em;
+	}
+
+	.row--right {
+		align-self: end;
+	}
+
+	.row em {
+		font-family: var(--font-body);
+		font-style: italic;
+		font-weight: 300;
+		font-size: 0.55em;
+		opacity: 0.65;
+		text-transform: lowercase;
+		padding: 0 0.2em;
+		vertical-align: 0.18em;
+	}
+
+	.lede {
+		font-size: 1rem;
+		line-height: 1.6;
+		opacity: 0.78;
+		margin: var(--space-2) 0 var(--space-3);
+		max-width: 38ch;
+	}
+
+	.reach {
+		display: flex;
+		flex-direction: column;
+		gap: 0.9rem;
+		margin: 0;
+		font-size: 0.7rem;
+	}
+
+	.reach dt {
+		opacity: 0.4;
+		margin-bottom: 0.2rem;
+		font-size: 0.6rem;
+	}
+
+	.reach dd {
+		margin: 0;
+		letter-spacing: 0.06em;
+	}
+
+	.reach a {
+		opacity: 0.85;
+		transition: opacity 0.2s ease, color 0.2s ease;
+	}
+
+	.reach a:hover {
+		opacity: 1;
+		color: var(--acid);
+	}
+
+	:global(.contact__left .bar) {
+		color: var(--bone);
+		opacity: 0.55;
+		margin-top: var(--space-3);
+	}
+
+	.contact__right {
+		padding: var(--space-7) var(--gutter) var(--space-6);
+		background: var(--bone);
+	}
+
+	@media (max-width: 1000px) {
+		.contact {
+			grid-template-columns: 1fr;
+		}
+		.left__sticky {
+			position: static;
+		}
+		.contact__left,
+		.contact__right {
+			padding-block: var(--space-5);
+		}
+	}
+</style>

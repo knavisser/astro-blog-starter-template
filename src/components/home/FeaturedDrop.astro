@@ -1,0 +1,471 @@
+---
+import { getCollection } from "astro:content";
+import Icon from "../Icon.astro";
+
+const pieces = (await getCollection("pieces"))
+	.filter((p) => p.data.status === "featured" || p.data.status === "available")
+	.sort((a, b) => a.data.index - b.data.index);
+
+const total = pieces.length;
+// duplicate items for a seamless marquee loop
+const loop = [...pieces, ...pieces];
+---
+
+<section class="drop" id="drop" data-state="running">
+	<header class="drop__head">
+		<div class="drop__head-left">
+			<p class="mono drop__kicker">// II. CYCLE I</p>
+			<h2 class="display drop__title">FEATURED · DROP</h2>
+		</div>
+		<div class="drop__head-right mono">
+			<p>{String(total).padStart(2, "0")} PIECES · INFINITE LOOP</p>
+			<p>TAP A PIECE TO FOCUS ↦</p>
+		</div>
+	</header>
+
+	<div class="drop__rail-wrap">
+		<div class="drop__shift" id="drop-shift">
+			<ol class="drop__rail" id="drop-rail" style={`--n: ${total};`}>
+				{
+					loop.map((piece, idx) => (
+						<li class="card">
+							<button
+								class="card__btn"
+								type="button"
+								data-cursor="zoom"
+								data-cursor-label="FOCUS"
+								data-piece-id={piece.id}
+							>
+								<figure class="card__figure">
+									<img
+										class="card__img"
+										src={piece.data.heroImage}
+										alt={piece.data.name}
+										loading={idx < 3 ? "eager" : "lazy"}
+									/>
+								</figure>
+								<div class="card__base">
+									<span class="mono card__idx">
+										///{String(piece.data.index).padStart(2, "0")} / {String(total).padStart(2, "0")}
+									</span>
+									<h3 class="display card__name">{piece.data.name}</h3>
+									<div class="card__meta mono">
+										<span>{piece.data.earStyle.toUpperCase()}</span>
+										<span class="dot">·</span>
+										<span>{piece.data.status === "available" ? "AVAILABLE" : "MTO"}</span>
+									</div>
+								</div>
+								<div class="card__details">
+									<div class="card__details-inner">
+										<p class="card__summary">{piece.data.summary}</p>
+										<p class="mono card__mat-label">// MATERIALS</p>
+										<ul class="card__materials mono">
+											{piece.data.materials.map((m: string) => <li>{m}</li>)}
+										</ul>
+										<a class="card__cta mono" href={`/archive/${piece.id}`} data-cursor="link">
+											<span>VIEW PIECE</span>
+											<Icon name="arrow-up-right" size={14} />
+										</a>
+									</div>
+								</div>
+							</button>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</div>
+</section>
+
+<script>
+	function bindDrop() {
+		const section = document.querySelector(".drop") as HTMLElement | null;
+		const wrap = section?.querySelector(".drop__rail-wrap") as HTMLElement | null;
+		const shift = document.getElementById("drop-shift");
+		if (!section || !wrap || !shift) return;
+
+		let expanded: HTMLElement | null = null;
+		let resumeT: number | null = null;
+
+		const clearShift = () => {
+			shift.style.setProperty("--shift", "0px");
+		};
+
+		const reset = (opts: { resumeNow?: boolean } = {}) => {
+			if (!expanded) return;
+			expanded.classList.remove("is-expanded");
+			expanded = null;
+			clearShift();
+			if (resumeT) window.clearTimeout(resumeT);
+			if (opts.resumeNow) {
+				section.setAttribute("data-state", "running");
+			} else {
+				// wait for shift to settle before resuming animation
+				resumeT = window.setTimeout(() => {
+					section.setAttribute("data-state", "running");
+				}, 600);
+			}
+		};
+
+		const expand = (card: HTMLElement) => {
+			// pause first so getBoundingClientRect reads the frozen position
+			section.setAttribute("data-state", "paused");
+			if (resumeT) window.clearTimeout(resumeT);
+
+			// clear any previous expansion (without resuming)
+			if (expanded && expanded !== card) {
+				expanded.classList.remove("is-expanded");
+			}
+
+			// next frame so the pause + class removal settle
+			requestAnimationFrame(() => {
+				const cardRect = card.getBoundingClientRect();
+				const wrapRect = wrap.getBoundingClientRect();
+				const cardCenter = cardRect.left + cardRect.width / 2;
+				const wrapCenter = wrapRect.left + wrapRect.width / 2;
+				const delta = wrapCenter - cardCenter;
+
+				shift.style.setProperty("--shift", `${delta.toFixed(2)}px`);
+				card.classList.add("is-expanded");
+				expanded = card;
+			});
+		};
+
+		section.querySelectorAll<HTMLElement>(".card").forEach((card) => {
+			const btn = card.querySelector<HTMLElement>(".card__btn");
+			if (!btn) return;
+			btn.addEventListener("click", (e) => {
+				// don't hijack clicks on the VIEW PIECE anchor inside the expanded panel
+				const target = e.target as HTMLElement;
+				if (target.closest(".card__cta")) return;
+				e.preventDefault();
+				if (expanded === card) {
+					reset();
+				} else {
+					expand(card);
+				}
+			});
+		});
+
+		// reset when section scrolls out of view
+		const io = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting && expanded) reset({ resumeNow: true });
+				});
+			},
+			{ threshold: 0.05 }
+		);
+		io.observe(section);
+
+		document.addEventListener("keydown", (e) => {
+			if (e.key === "Escape" && expanded) reset();
+		});
+	}
+
+	bindDrop();
+	document.addEventListener("astro:after-swap", bindDrop);
+</script>
+
+<style>
+	.drop {
+		position: relative;
+		background: var(--bone);
+		color: var(--ink);
+		padding: var(--space-5) 0 var(--space-7);
+		overflow: hidden;
+	}
+
+	.drop__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: end;
+		padding: 0 var(--gutter) var(--space-4);
+		max-width: var(--max-w);
+		margin: 0 auto;
+		gap: var(--space-3);
+	}
+
+	.drop__kicker {
+		opacity: 0.5;
+		margin: 0 0 0.5rem;
+		font-size: 0.7rem;
+	}
+
+	.drop__title {
+		margin: 0;
+		font-size: clamp(2rem, 5.5vw, 4.5rem);
+		letter-spacing: 0.06em;
+	}
+
+	.drop__head-right {
+		text-align: right;
+		opacity: 0.5;
+		font-size: 0.7rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.drop__head-right p {
+		margin: 0;
+	}
+
+	.drop__rail-wrap {
+		position: relative;
+		mask-image: linear-gradient(
+			to right,
+			transparent 0,
+			#000 4%,
+			#000 96%,
+			transparent 100%
+		);
+		-webkit-mask-image: linear-gradient(
+			to right,
+			transparent 0,
+			#000 4%,
+			#000 96%,
+			transparent 100%
+		);
+	}
+
+	/* outer shift layer — used to center a clicked card */
+	.drop__shift {
+		--shift: 0px;
+		transform: translate3d(var(--shift), 0, 0);
+		transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
+		will-change: transform;
+	}
+
+	/* inner rail — handles the auto-scroll */
+	.drop__rail {
+		--card-w: clamp(280px, 28vw, 360px);
+		--card-gap: 1.5rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		gap: var(--card-gap);
+		align-items: flex-start;
+		width: max-content;
+		will-change: transform;
+		animation: drop-scroll linear infinite;
+		animation-duration: calc(var(--n) * 8s);
+	}
+
+	@keyframes drop-scroll {
+		from {
+			transform: translate3d(0, 0, 0);
+		}
+		to {
+			transform: translate3d(calc(var(--n) * (var(--card-w) + var(--card-gap)) * -1), 0, 0);
+		}
+	}
+
+	.drop[data-state="paused"] .drop__rail {
+		animation-play-state: paused;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.drop__rail {
+			animation: none;
+		}
+		.drop__rail-wrap {
+			overflow-x: auto;
+		}
+	}
+
+	/* ---- card ---- */
+	.card {
+		flex: 0 0 var(--card-w);
+		width: var(--card-w);
+		user-select: none;
+		transform-origin: center top;
+		transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.card.is-expanded {
+		z-index: 5;
+		transform: scale(1.3);
+	}
+
+	.drop[data-state="paused"] .card:not(.is-expanded) {
+		opacity: 0.45;
+		transition: opacity 0.5s ease;
+	}
+
+	.drop[data-state="running"] .card {
+		opacity: 1;
+		transition: opacity 0.5s ease;
+	}
+
+	.card__btn {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		width: 100%;
+		text-align: left;
+		color: inherit;
+	}
+
+	.card__figure {
+		position: relative;
+		margin: 0;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--chrome-1);
+	}
+
+	.card__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 25%;
+		filter: saturate(0.95) contrast(1.02);
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1), filter 0.5s ease;
+		will-change: transform;
+	}
+
+	.card.is-expanded .card__img {
+		filter: saturate(1.08) contrast(1.06);
+	}
+
+	.card__base {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.card__idx {
+		font-size: 0.62rem;
+		letter-spacing: 0.18em;
+		opacity: 0.55;
+	}
+
+	.card__name {
+		margin: 0;
+		font-size: clamp(0.9rem, 1.2vw, 1.1rem);
+		letter-spacing: 0.16em;
+	}
+
+	.card__meta {
+		display: flex;
+		gap: 0.4rem;
+		font-size: 0.58rem;
+		opacity: 0.7;
+		letter-spacing: 0.12em;
+		align-items: center;
+	}
+
+	.dot {
+		opacity: 0.4;
+	}
+
+	/* ---- inline expansion panel ---- */
+	.card__details {
+		display: grid;
+		grid-template-rows: 0fr;
+		opacity: 0;
+		transition: grid-template-rows 0.55s cubic-bezier(0.2, 0.7, 0.1, 1),
+			opacity 0.4s ease;
+	}
+
+	.card.is-expanded .card__details {
+		grid-template-rows: 1fr;
+		opacity: 1;
+		transition-delay: 0.15s, 0.2s;
+	}
+
+	.card__details-inner {
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding-top: 0.6rem;
+		border-top: 1px solid var(--rule);
+		margin-top: 0.3rem;
+	}
+
+	.card__summary {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: 0.62rem;
+		line-height: 1.55;
+		opacity: 0.78;
+	}
+
+	.card__mat-label {
+		margin: 0;
+		opacity: 0.4;
+		font-size: 0.52rem;
+	}
+
+	.card__materials {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		font-size: 0.55rem;
+		letter-spacing: 0.06em;
+	}
+
+	.card__materials li::before {
+		content: "·";
+		opacity: 0.5;
+		display: inline-block;
+		width: 0.8em;
+	}
+
+	.card__cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.4rem;
+		padding: 0.55rem 0.85rem;
+		font-size: 0.55rem;
+		letter-spacing: 0.22em;
+		background: var(--ink);
+		color: var(--bone);
+		align-self: start;
+		position: relative;
+		overflow: hidden;
+		transition: color 0.4s ease;
+	}
+
+	.card__cta::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--acid);
+		transform: translateY(101%);
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.card__cta > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.card__cta:hover {
+		color: var(--ink);
+	}
+
+	.card__cta:hover::before {
+		transform: translateY(0);
+	}
+
+	@media (max-width: 720px) {
+		.drop__head {
+			flex-direction: column;
+			align-items: start;
+		}
+		.drop__head-right {
+			text-align: left;
+		}
+		.card.is-expanded {
+			transform: scale(1.15);
+		}
+	}
+</style>

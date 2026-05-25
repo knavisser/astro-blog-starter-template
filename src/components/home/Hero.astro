@@ -1,0 +1,234 @@
+---
+import { SITE_TITLE, ATELIER_LABEL, ATELIER_COORDS } from "../../consts";
+import CrossCircle from "../sigils/CrossCircle.astro";
+
+interface Props {
+	image?: string;
+	imageAlt?: string;
+}
+
+const {
+	image = "/images/hoodie2.jpg",
+	imageAlt = "OBJECT 002 — BLACK HORN — twin horn hoodie",
+} = Astro.props;
+---
+
+<section class="hero" data-cursor="sigil" data-cursor-label="OBJ 002">
+	<img class="hero__img" src={image} alt={imageAlt} fetchpriority="high" />
+	<div class="hero__veil" aria-hidden="true"></div>
+
+	<div class="hero__top mono">
+		<span class="hero__index">///OBJ 002 / 007</span>
+		<span class="hero__season">CYCLE I · MTO</span>
+	</div>
+
+	<div class="hero__bottom">
+		<div class="hero__bottom-left">
+			<CrossCircle size={48} class="hero__sigil" />
+			<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
+			<p class="mono hero__sub">stitched to be summoned · one of one</p>
+		</div>
+
+		<div class="hero__bottom-right mono">
+			<p>{ATELIER_LABEL}</p>
+			<p>{ATELIER_COORDS}</p>
+			<p>// MADE TO ORDER</p>
+		</div>
+	</div>
+
+	<a class="hero__scroll mono" href="#manifesto" data-cursor="link">
+		SCROLL <span aria-hidden="true">↓</span>
+	</a>
+</section>
+
+<script>
+	function bindHeroParallax() {
+		const hero = document.querySelector(".hero") as HTMLElement | null;
+		const img = hero?.querySelector(".hero__img") as HTMLImageElement | null;
+		if (!hero || !img) return;
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+		const START = 8; // matches initial CSS
+		const END = 62; // reveals chest/panel as user scrolls
+		let ticking = false;
+		const tick = () => {
+			const rect = hero.getBoundingClientRect();
+			const total = rect.height;
+			const scrolled = Math.max(0, -rect.top);
+			const progress = Math.min(1, total > 0 ? scrolled / total : 0);
+			const pos = START + (END - START) * progress;
+			img.style.objectPosition = `center ${pos.toFixed(2)}%`;
+			ticking = false;
+		};
+		const onScroll = () => {
+			if (!ticking) {
+				requestAnimationFrame(tick);
+				ticking = true;
+			}
+		};
+		window.addEventListener("scroll", onScroll, { passive: true });
+		window.addEventListener("resize", onScroll, { passive: true });
+		tick();
+	}
+
+	bindHeroParallax();
+	document.addEventListener("astro:after-swap", bindHeroParallax);
+</script>
+
+<style>
+	.hero {
+		position: relative;
+		width: 100%;
+		height: 100dvh;
+		min-height: 600px;
+		overflow: hidden;
+		color: var(--bone);
+		background: var(--ink);
+	}
+
+	.hero__img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 8%;
+		filter: grayscale(0.15) contrast(1.05) saturate(0.92);
+		transform: scale(1.02);
+		animation: hero-zoom 14s cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
+	}
+
+	@keyframes hero-zoom {
+		from {
+			transform: scale(1.08);
+			filter: grayscale(0.45) contrast(1.1) saturate(0.7);
+		}
+		to {
+			transform: scale(1);
+			filter: grayscale(0.05) contrast(1.05) saturate(0.95);
+		}
+	}
+
+	.hero__veil {
+		position: absolute;
+		inset: 0;
+		background:
+			linear-gradient(to bottom, rgba(10, 9, 8, 0.6) 0%, rgba(10, 9, 8, 0) 28%, rgba(10, 9, 8, 0) 62%, rgba(10, 9, 8, 0.78) 100%),
+			radial-gradient(120% 80% at 50% 100%, rgba(10, 9, 8, 0.35) 0%, rgba(10, 9, 8, 0) 50%);
+		pointer-events: none;
+	}
+
+	.hero__top {
+		position: absolute;
+		top: calc(var(--header-h) + 1rem);
+		left: var(--gutter);
+		right: var(--gutter);
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.7rem;
+		opacity: 0.85;
+		letter-spacing: 0.14em;
+	}
+
+	.hero__bottom {
+		position: absolute;
+		bottom: var(--space-5);
+		left: var(--gutter);
+		right: var(--gutter);
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: end;
+		gap: var(--space-4);
+	}
+
+	.hero__bottom-left {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		max-width: 80%;
+	}
+
+	:global(.hero__sigil) {
+		color: var(--acid);
+		margin-bottom: 0.5rem;
+	}
+
+	.hero__wordmark {
+		margin: 0;
+		font-size: clamp(2.5rem, 9.5vw, 9.5rem);
+		letter-spacing: clamp(0.12em, 1.4vw, 0.32em);
+		line-height: 0.92;
+		text-transform: uppercase;
+		mix-blend-mode: difference;
+		color: #ffffff;
+	}
+
+	.hero__sub {
+		margin: 0;
+		font-size: 0.7rem;
+		opacity: 0.78;
+	}
+
+	.hero__bottom-right {
+		text-align: right;
+		font-size: 0.65rem;
+		opacity: 0.8;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.hero__bottom-right p {
+		margin: 0;
+	}
+
+	.hero__scroll {
+		position: absolute;
+		bottom: 1.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: inline-flex;
+		gap: 0.6rem;
+		font-size: 0.6rem;
+		letter-spacing: 0.32em;
+		opacity: 0.65;
+		transition: opacity 0.3s ease, transform 0.3s ease;
+		animation: scroll-pulse 2.4s ease-in-out infinite;
+	}
+
+	.hero__scroll:hover {
+		opacity: 1;
+	}
+
+	@keyframes scroll-pulse {
+		0%, 100% {
+			transform: translate(-50%, 0);
+			opacity: 0.65;
+		}
+		50% {
+			transform: translate(-50%, 4px);
+			opacity: 1;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.hero__bottom {
+			grid-template-columns: 1fr;
+		}
+		.hero__bottom-right {
+			text-align: left;
+		}
+		.hero__bottom-left {
+			max-width: 100%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero__img {
+			animation: none;
+		}
+		.hero__scroll {
+			animation: none;
+		}
+	}
+</style>

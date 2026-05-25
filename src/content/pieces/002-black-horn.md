@@ -1,0 +1,19 @@
+---
+name: "OBJECT 002 — BLACK HORN"
+index: 2
+earStyle: Doberman
+materials:
+  - "420gsm brushed cotton"
+  - "twin hand-shaped horns"
+  - "stud row seam reinforcement"
+heroImage: "/images/hoodie2.jpg"
+summary: "twin horns pulled tall. studded seam down the centre. a quiet, occult thing."
+status: featured
+dateCompleted: 2026-01-22
+---
+
+Twin horns drawn long and lean off the hood crown. Cut from a heavy 420gsm brushed cotton in deep coal. Centre-front seam is reinforced with a hand-set stud row — half utility, half ritual.
+
+Worn cropped on the body so the silhouette reads as horns first, hoodie second.
+
+This is the piece that named the brand.

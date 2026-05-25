@@ -1,0 +1,168 @@
+---
+import BaseHead from "../components/BaseHead.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import Cursor from "../components/Cursor.astro";
+import { ClientRouter } from "astro:transitions";
+
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+	hideHeader?: boolean;
+	hideFooter?: boolean;
+}
+
+const { title, description, image, hideHeader, hideFooter } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={title} description={description} image={image} />
+		<ClientRouter />
+	</head>
+	<body>
+		{!hideHeader && <Header />}
+		<main>
+			<slot />
+		</main>
+		{!hideFooter && <Footer />}
+		<Cursor />
+
+		<script>
+			import Lenis from "lenis";
+
+			function shouldRunMotion() {
+				return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			}
+
+			let lenis: any = null;
+			let cursorRAF: number | null = null;
+
+			function bootLenis() {
+				if (lenis) {
+					lenis.destroy?.();
+					lenis = null;
+				}
+				if (!shouldRunMotion()) return;
+				lenis = new Lenis({
+					duration: 1.1,
+					easing: (t: number) => 1 - Math.pow(1 - t, 3),
+					smoothWheel: true,
+					wheelMultiplier: 1,
+					touchMultiplier: 1.4,
+				});
+				function raf(time: number) {
+					lenis?.raf(time);
+					requestAnimationFrame(raf);
+				}
+				requestAnimationFrame(raf);
+				document.documentElement.classList.add("lenis-smooth");
+			}
+
+			function bootCursor() {
+				const cursor = document.getElementById("cursor");
+				if (!cursor) return;
+				const isFinePointer = window.matchMedia(
+					"(hover: hover) and (pointer: fine)"
+				).matches;
+				if (!isFinePointer || !shouldRunMotion()) return;
+				document.documentElement.classList.add("has-cursor");
+
+				const ring = cursor.querySelector(".cursor__ring") as HTMLElement | null;
+				const dot = cursor.querySelector(".cursor__dot") as HTMLElement | null;
+				const label = cursor.querySelector(
+					".cursor__label"
+				) as HTMLElement | null;
+				if (!ring || !dot || !label) return;
+
+				let tx = window.innerWidth / 2;
+				let ty = window.innerHeight / 2;
+				let rx = tx;
+				let ry = ty;
+
+				function onMove(e: PointerEvent) {
+					tx = e.clientX;
+					ty = e.clientY;
+					dot!.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, -50%)`;
+				}
+
+				function tick() {
+					rx += (tx - rx) * 0.18;
+					ry += (ty - ry) * 0.18;
+					ring!.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+					label!.style.transform = `translate(${rx}px, ${ry + 36}px) translate(-50%, -50%)`;
+					cursorRAF = requestAnimationFrame(tick);
+				}
+
+				if (cursorRAF) cancelAnimationFrame(cursorRAF);
+				window.addEventListener("pointermove", onMove, { passive: true });
+				tick();
+
+				function onOver(e: Event) {
+					const el = (e.target as HTMLElement)?.closest(
+						"[data-cursor]"
+					) as HTMLElement | null;
+					if (el) {
+						const state = el.dataset.cursor || "link";
+						cursor!.setAttribute("data-state", state);
+						const lbl = el.dataset.cursorLabel;
+						label!.textContent = lbl || (state === "drag" ? "DRAG" : state === "zoom" ? "VIEW" : "");
+					} else {
+						cursor!.removeAttribute("data-state");
+						label!.textContent = "";
+					}
+				}
+				document.addEventListener("pointerover", onOver);
+				document.addEventListener("pointerout", onOver);
+			}
+
+			function bootReveals() {
+				if (!("IntersectionObserver" in window)) {
+					document
+						.querySelectorAll("[data-reveal], [data-reveal-stagger]")
+						.forEach((el) => el.classList.add("is-revealed"));
+					return;
+				}
+				if (!shouldRunMotion()) {
+					document
+						.querySelectorAll("[data-reveal], [data-reveal-stagger]")
+						.forEach((el) => el.classList.add("is-revealed"));
+					return;
+				}
+				const io = new IntersectionObserver(
+					(entries) => {
+						entries.forEach((entry) => {
+							if (entry.isIntersecting) {
+								entry.target.classList.add("is-revealed");
+								io.unobserve(entry.target);
+							}
+						});
+					},
+					{ threshold: 0.15, rootMargin: "0px 0px -10% 0px" }
+				);
+				document
+					.querySelectorAll("[data-reveal], [data-reveal-stagger]")
+					.forEach((el) => {
+						// stagger: set per-child --i index
+						if ((el as HTMLElement).hasAttribute("data-reveal-stagger")) {
+							Array.from(el.children).forEach((child, i) => {
+								(child as HTMLElement).style.setProperty("--i", String(i));
+							});
+						}
+						io.observe(el);
+					});
+			}
+
+			function boot() {
+				bootLenis();
+				bootCursor();
+				bootReveals();
+			}
+
+			boot();
+			document.addEventListener("astro:after-swap", boot);
+		</script>
+	</body>
+</html>

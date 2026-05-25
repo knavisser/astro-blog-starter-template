@@ -1,0 +1,19 @@
+---
+name: "OBJECT 007 — STATIC HORN"
+index: 7
+earStyle: Doberman
+materials:
+  - "hand-bleached cotton fleece"
+  - "graphite tie-dye"
+  - "single twisted horn"
+heroImage: "/images/hoodie7.jpg"
+summary: "graphite static-dye body. single twisted horn pulled forward. graphic art on the chest in unstable ink."
+status: available
+dateCompleted: 2026-04-29
+---
+
+The body was hand-dyed with diluted India ink rubbed in over bleach — a graphite static-storm finish that no two pieces will ever share. The horn was twisted before sewing so it carries a small spiral.
+
+Front graphic was hand-painted with the kind of ink that bleeds for a week.
+
+Built for the cold months, when sound carries further.

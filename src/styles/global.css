@@ -1,139 +1,173 @@
-/*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
- */
+@import "@fontsource/michroma/400.css";
+@import "@fontsource/space-grotesk/300.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/space-mono/400.css";
+@import "@fontsource/space-mono/700.css";
 
 :root {
-	--accent: #2337ff;
-	--accent-dark: #000d8a;
-	--black: 15, 18, 25;
-	--gray: 96, 115, 159;
-	--gray-light: 229, 233, 240;
-	--gray-dark: 34, 41, 57;
-	--gray-gradient: rgba(var(--gray-light), 50%), #fff;
-	--box-shadow:
-		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
-		0 16px 32px rgba(var(--gray), 33%);
+	/* palette */
+	--bone: #f4f1ec;
+	--bone-2: #ebe7df;
+	--ink: #0a0908;
+	--ink-soft: #1a1815;
+	--chrome-1: #d9d5cd;
+	--chrome-2: #b7b0a3;
+	--chrome-3: #7a7468;
+	--acid: #c6ff00;
+	--acid-dim: #8db300;
+	--rule: rgba(10, 9, 8, 0.12);
+	--rule-strong: rgba(10, 9, 8, 0.45);
+
+	/* type */
+	--font-display: "Michroma", "Arial Narrow", sans-serif;
+	--font-body:
+		"Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+	--font-mono: "Space Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+	/* scale */
+	--space-0: 0.25rem;
+	--space-1: 0.5rem;
+	--space-2: 1rem;
+	--space-3: 1.5rem;
+	--space-4: 2rem;
+	--space-5: 3rem;
+	--space-6: 4rem;
+	--space-7: 6rem;
+	--space-8: 8rem;
+	--space-9: 12rem;
+
+	/* misc */
+	--cursor-size: 18px;
+	--header-h: 64px;
+	--max-w: 1680px;
+	--gutter: clamp(1.25rem, 4vw, 4rem);
 }
-@font-face {
-	font-family: "Atkinson";
-	src: url("/fonts/atkinson-regular.woff") format("woff");
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
 }
-@font-face {
-	font-family: "Atkinson";
-	src: url("/fonts/atkinson-bold.woff") format("woff");
-	font-weight: 700;
-	font-style: normal;
-	font-display: swap;
+
+html {
+	background: var(--bone);
+	color: var(--ink);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	scroll-behavior: auto;
 }
+
+html.lenis-smooth {
+	scroll-behavior: auto;
+}
+
 body {
-	font-family: "Atkinson", sans-serif;
 	margin: 0;
-	padding: 0;
-	text-align: left;
-	background: linear-gradient(var(--gray-gradient)) no-repeat;
-	background-size: 100% 600px;
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-	color: rgb(var(--gray-dark));
-	font-size: 20px;
-	line-height: 1.7;
+	min-height: 100dvh;
+	font-family: var(--font-body);
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 1.5;
+	letter-spacing: 0.005em;
+	color: var(--ink);
+	background: var(--bone);
+	overflow-x: hidden;
 }
+
 main {
-	width: 720px;
-	max-width: calc(100% - 2em);
-	margin: auto;
-	padding: 3em 1em;
+	display: block;
+	min-height: 100dvh;
 }
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-	margin: 0 0 0.5rem 0;
-	color: rgb(var(--black));
-	line-height: 1.2;
-}
-h1 {
-	font-size: 3.052em;
-}
-h2 {
-	font-size: 2.441em;
-}
-h3 {
-	font-size: 1.953em;
-}
-h4 {
-	font-size: 1.563em;
-}
-h5 {
-	font-size: 1.25em;
-}
-strong,
-b {
-	font-weight: 700;
-}
+
 a {
-	color: var(--accent);
+	color: inherit;
+	text-decoration: none;
 }
-a:hover {
-	color: var(--accent);
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+	outline: 2px solid var(--acid);
+	outline-offset: 3px;
 }
-p {
-	margin-bottom: 1em;
+
+button {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
 }
-.prose p {
-	margin-bottom: 2em;
-}
-textarea {
-	width: 100%;
-	font-size: 16px;
-}
-input {
-	font-size: 16px;
-}
-table {
-	width: 100%;
-}
-img {
+
+img,
+svg {
+	display: block;
 	max-width: 100%;
+}
+
+img {
 	height: auto;
-	border-radius: 8px;
 }
-code {
-	padding: 2px 5px;
-	background-color: rgb(var(--gray-light));
-	border-radius: 2px;
+
+::selection {
+	background: var(--ink);
+	color: var(--acid);
 }
-pre {
-	padding: 1.5em;
-	border-radius: 8px;
+
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
 }
-pre > code {
-	all: unset;
+::-webkit-scrollbar-track {
+	background: transparent;
 }
-blockquote {
-	border-left: 4px solid var(--accent);
-	padding: 0 0 0 20px;
-	margin: 0px;
-	font-size: 1.333em;
+::-webkit-scrollbar-thumb {
+	background: var(--chrome-2);
+	border-radius: 0;
 }
-hr {
-	border: none;
-	border-top: 1px solid rgb(var(--gray-light));
+::-webkit-scrollbar-thumb:hover {
+	background: var(--ink);
 }
-@media (max-width: 720px) {
-	body {
-		font-size: 18px;
-	}
-	main {
-		padding: 1em;
-	}
+
+/* utility primitives */
+.display {
+	font-family: var(--font-display);
+	font-weight: 400;
+	letter-spacing: 0.18em;
+	line-height: 0.95;
+	text-transform: uppercase;
+}
+
+.mono {
+	font-family: var(--font-mono);
+	font-weight: 400;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-size: 0.72rem;
+}
+
+.mono--lg {
+	font-family: var(--font-mono);
+	font-weight: 400;
+	letter-spacing: 0.04em;
+	font-size: 0.95rem;
+}
+
+.rule {
+	height: 1px;
+	background: var(--rule);
+	border: 0;
+	margin: 0;
+}
+
+.gutter {
+	padding-inline: var(--gutter);
 }
 
 .sr-only {
@@ -144,12 +178,66 @@ hr {
 	height: 1px;
 	width: 1px;
 	overflow: hidden;
-	/* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-	clip: rect(1px 1px 1px 1px);
-	/* maybe deprecated but we need to support legacy browsers */
 	clip: rect(1px, 1px, 1px, 1px);
-	/* modern browsers, clip-path works inwards from each corner */
 	clip-path: inset(50%);
-	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
 	white-space: nowrap;
+}
+
+/* reveal primitive — used by IntersectionObserver in Base layout */
+[data-reveal] {
+	opacity: 0;
+	transform: translate3d(0, 1.5rem, 0);
+	transition:
+		opacity 0.9s cubic-bezier(0.2, 0.7, 0.1, 1),
+		transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	will-change: opacity, transform;
+}
+
+[data-reveal].is-revealed {
+	opacity: 1;
+	transform: translate3d(0, 0, 0);
+}
+
+[data-reveal-stagger] > * {
+	opacity: 0;
+	transform: translate3d(0, 1rem, 0);
+	transition:
+		opacity 0.7s cubic-bezier(0.2, 0.7, 0.1, 1),
+		transform 0.7s cubic-bezier(0.2, 0.7, 0.1, 1);
+	transition-delay: calc(var(--i, 0) * 60ms);
+}
+
+[data-reveal-stagger].is-revealed > * {
+	opacity: 1;
+	transform: translate3d(0, 0, 0);
+}
+
+/* honored */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+		scroll-behavior: auto !important;
+	}
+
+	[data-reveal],
+	[data-reveal-stagger] > * {
+		opacity: 1 !important;
+		transform: none !important;
+	}
+
+	#cursor {
+		display: none !important;
+	}
+}
+
+/* hide native cursor when our custom cursor is active */
+@media (hover: hover) and (pointer: fine) {
+	html.has-cursor,
+	html.has-cursor * {
+		cursor: none !important;
+	}
 }
