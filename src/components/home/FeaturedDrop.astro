@@ -19,11 +19,11 @@ const loop = [...pieces, ...pieces];
 		</div>
 		<div class="drop__head-right mono">
 			<p>{String(total).padStart(2, "0")} PIECES · INFINITE LOOP</p>
-			<p>TAP A PIECE TO FOCUS ↦</p>
+			<p>DRAG TO SCRUB · TAP TO FOCUS ↦</p>
 		</div>
 	</header>
 
-	<div class="drop__rail-wrap">
+	<div class="drop__rail-wrap" id="drop-wrap">
 		<div class="drop__shift" id="drop-shift">
 			<ol class="drop__rail" id="drop-rail" style={`--n: ${total};`}>
 				{
@@ -42,6 +42,7 @@ const loop = [...pieces, ...pieces];
 										src={piece.data.heroImage}
 										alt={piece.data.name}
 										loading={idx < 3 ? "eager" : "lazy"}
+										draggable="false"
 									/>
 								</figure>
 								<div class="card__base">
@@ -80,78 +81,201 @@ const loop = [...pieces, ...pieces];
 <script>
 	function bindDrop() {
 		const section = document.querySelector(".drop") as HTMLElement | null;
-		const wrap = section?.querySelector(".drop__rail-wrap") as HTMLElement | null;
+		const wrap = document.getElementById("drop-wrap");
 		const shift = document.getElementById("drop-shift");
-		if (!section || !wrap || !shift) return;
+		const rail = document.getElementById("drop-rail");
+		if (!section || !wrap || !shift || !rail) return;
+
+		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const AUTO_VELOCITY = reduced ? 0 : 36; // px / s — idle drift speed
+		const DRAG_RATIO = 0.5; // 1.0 = rail follows pointer 1:1, 0.5 = rail moves half as much
+		const INERTIA_DECAY = 0.95; // per frame at 60 fps — lower = snappier stop
+		const VELOCITY_CLAMP = 2800; // px / s — momentum cap on a fast flick
+		const DRAG_THRESHOLD = 6; // px — movement before a tap becomes a drag
+
+		// measure the width of one "cycle" (first half of the doubled content)
+		let cycleWidth = 0;
+		const measure = () => {
+			cycleWidth = rail.scrollWidth / 2;
+		};
+		measure();
+		window.addEventListener("resize", measure, { passive: true });
+		// re-measure once fonts/images finalise layout
+		if ((document as any).fonts?.ready) (document as any).fonts.ready.then(measure);
+		window.addEventListener("load", measure, { once: true });
+
+		// ---- state ----
+		let pos = 0;
+		let dragVelocity = 0;
+		let isDragging = false;
+		let suppressClick = false;
+		let activePointerId: number | null = null;
+		let pointerStartX = 0;
+		let pointerLastX = 0;
+		let pointerLastT = 0;
+		let pointerStartPos = 0;
 
 		let expanded: HTMLElement | null = null;
-		let resumeT: number | null = null;
 
-		const clearShift = () => {
+		// ---- render loop ----
+		let lastT = 0;
+		let rafId = 0;
+		const tick = (t: number) => {
+			if (!lastT) lastT = t;
+			const dt = Math.min(0.05, (t - lastT) / 1000);
+			lastT = t;
+
+			if (!expanded) {
+				if (isDragging) {
+					// pos is set by pointer handler — nothing to add here
+				} else {
+					// idle: auto-scroll + decaying drag inertia
+					pos -= AUTO_VELOCITY * dt;
+					pos -= dragVelocity * dt;
+					const k = Math.pow(INERTIA_DECAY, dt * 60);
+					dragVelocity *= k;
+					if (Math.abs(dragVelocity) < 1) dragVelocity = 0;
+				}
+
+				// wrap into [-cycleWidth, 0]
+				if (cycleWidth > 0) {
+					if (pos <= -cycleWidth) pos += cycleWidth;
+					if (pos > 0) pos -= cycleWidth;
+				}
+
+				rail.style.transform = `translate3d(${pos.toFixed(2)}px, 0, 0)`;
+			}
+			rafId = requestAnimationFrame(tick);
+		};
+		rafId = requestAnimationFrame(tick);
+
+		// ---- expansion ----
+		const transferShiftIntoPos = () => {
+			const styleVal = shift.style.getPropertyValue("--shift");
+			const px = parseFloat(styleVal) || 0;
+			if (px === 0) return;
+			pos += px;
+			// snap the shift without a transition so the visual doesn't jump
+			shift.style.transition = "none";
 			shift.style.setProperty("--shift", "0px");
+			// force reflow then restore CSS-defined transition
+			void shift.offsetWidth;
+			shift.style.transition = "";
 		};
 
-		const reset = (opts: { resumeNow?: boolean } = {}) => {
+		const closeExpansion = (opts: { instant?: boolean } = {}) => {
 			if (!expanded) return;
 			expanded.classList.remove("is-expanded");
 			expanded = null;
-			clearShift();
-			if (resumeT) window.clearTimeout(resumeT);
-			if (opts.resumeNow) {
-				section.setAttribute("data-state", "running");
+			if (opts.instant) {
+				transferShiftIntoPos();
 			} else {
-				// wait for shift to settle before resuming animation
-				resumeT = window.setTimeout(() => {
-					section.setAttribute("data-state", "running");
-				}, 600);
+				shift.style.setProperty("--shift", "0px");
 			}
+			section.setAttribute("data-state", "running");
 		};
 
-		const expand = (card: HTMLElement) => {
-			// pause first so getBoundingClientRect reads the frozen position
+		const openExpansion = (card: HTMLElement) => {
+			if (expanded === card) return;
+			if (expanded) expanded.classList.remove("is-expanded");
+			dragVelocity = 0;
 			section.setAttribute("data-state", "paused");
-			if (resumeT) window.clearTimeout(resumeT);
 
-			// clear any previous expansion (without resuming)
-			if (expanded && expanded !== card) {
-				expanded.classList.remove("is-expanded");
-			}
-
-			// next frame so the pause + class removal settle
 			requestAnimationFrame(() => {
 				const cardRect = card.getBoundingClientRect();
 				const wrapRect = wrap.getBoundingClientRect();
 				const cardCenter = cardRect.left + cardRect.width / 2;
 				const wrapCenter = wrapRect.left + wrapRect.width / 2;
 				const delta = wrapCenter - cardCenter;
-
 				shift.style.setProperty("--shift", `${delta.toFixed(2)}px`);
 				card.classList.add("is-expanded");
 				expanded = card;
 			});
 		};
 
+		// ---- pointer handling (document-level move/up so drag survives leaving wrap) ----
+		const onPointerMove = (e: PointerEvent) => {
+			if (activePointerId !== e.pointerId) return;
+			const dx = e.clientX - pointerStartX;
+			if (!isDragging && Math.abs(dx) > DRAG_THRESHOLD) {
+				isDragging = true;
+				wrap.classList.add("is-dragging");
+				if (expanded) closeExpansion({ instant: true });
+			}
+			if (isDragging) {
+				pos = pointerStartPos + dx * DRAG_RATIO;
+				const now = performance.now();
+				const dt = (now - pointerLastT) / 1000;
+				if (dt > 0) {
+					let instantV = (-(e.clientX - pointerLastX) / dt) * DRAG_RATIO;
+					// EMA smoothing then clamp
+					dragVelocity = 0.7 * dragVelocity + 0.3 * instantV;
+					if (dragVelocity > VELOCITY_CLAMP) dragVelocity = VELOCITY_CLAMP;
+					if (dragVelocity < -VELOCITY_CLAMP) dragVelocity = -VELOCITY_CLAMP;
+				}
+				pointerLastX = e.clientX;
+				pointerLastT = now;
+			}
+		};
+
+		const onPointerUp = (e: PointerEvent) => {
+			if (activePointerId !== e.pointerId) return;
+			document.removeEventListener("pointermove", onPointerMove);
+			document.removeEventListener("pointerup", onPointerUp);
+			document.removeEventListener("pointercancel", onPointerUp);
+			activePointerId = null;
+			if (isDragging) {
+				suppressClick = true;
+				wrap.classList.remove("is-dragging");
+				isDragging = false;
+				// momentum continues automatically in tick()
+			}
+		};
+
+		wrap.addEventListener("pointerdown", (e) => {
+			if (e.pointerType === "mouse" && e.button !== 0) return;
+			isDragging = false;
+			activePointerId = e.pointerId;
+			pointerStartX = e.clientX;
+			pointerLastX = e.clientX;
+			pointerLastT = performance.now();
+			pointerStartPos = pos;
+			dragVelocity = 0;
+			document.addEventListener("pointermove", onPointerMove);
+			document.addEventListener("pointerup", onPointerUp);
+			document.addEventListener("pointercancel", onPointerUp);
+		});
+
+		// suppress browser drag behaviour on images
+		wrap.addEventListener("dragstart", (e) => e.preventDefault());
+
+		// ---- click handling on each card ----
 		section.querySelectorAll<HTMLElement>(".card").forEach((card) => {
 			const btn = card.querySelector<HTMLElement>(".card__btn");
 			if (!btn) return;
 			btn.addEventListener("click", (e) => {
-				// don't hijack clicks on the VIEW PIECE anchor inside the expanded panel
+				if (suppressClick) {
+					suppressClick = false;
+					e.preventDefault();
+					return;
+				}
 				const target = e.target as HTMLElement;
+				// let VIEW PIECE link nav happen
 				if (target.closest(".card__cta")) return;
 				e.preventDefault();
 				if (expanded === card) {
-					reset();
+					closeExpansion();
 				} else {
-					expand(card);
+					openExpansion(card);
 				}
 			});
 		});
 
-		// reset when section scrolls out of view
+		// reset on scroll-out
 		const io = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
-					if (!entry.isIntersecting && expanded) reset({ resumeNow: true });
+					if (!entry.isIntersecting && expanded) closeExpansion();
 				});
 			},
 			{ threshold: 0.05 }
@@ -159,8 +283,20 @@ const loop = [...pieces, ...pieces];
 		io.observe(section);
 
 		document.addEventListener("keydown", (e) => {
-			if (e.key === "Escape" && expanded) reset();
+			if (e.key === "Escape" && expanded) closeExpansion();
 		});
+
+		// teardown on Astro page swap
+		document.addEventListener(
+			"astro:before-swap",
+			() => {
+				cancelAnimationFrame(rafId);
+				document.removeEventListener("pointermove", onPointerMove);
+				document.removeEventListener("pointerup", onPointerUp);
+				document.removeEventListener("pointercancel", onPointerUp);
+			},
+			{ once: true }
+		);
 	}
 
 	bindDrop();
@@ -213,6 +349,10 @@ const loop = [...pieces, ...pieces];
 
 	.drop__rail-wrap {
 		position: relative;
+		touch-action: pan-y;
+		-webkit-user-select: none;
+		user-select: none;
+		cursor: grab;
 		mask-image: linear-gradient(
 			to right,
 			transparent 0,
@@ -229,7 +369,11 @@ const loop = [...pieces, ...pieces];
 		);
 	}
 
-	/* outer shift layer — used to center a clicked card */
+	.drop__rail-wrap.is-dragging {
+		cursor: grabbing;
+	}
+
+	/* outer layer for click-to-center shift */
 	.drop__shift {
 		--shift: 0px;
 		transform: translate3d(var(--shift), 0, 0);
@@ -237,7 +381,7 @@ const loop = [...pieces, ...pieces];
 		will-change: transform;
 	}
 
-	/* inner rail — handles the auto-scroll */
+	/* inner rail — JS-driven transform */
 	.drop__rail {
 		--card-w: clamp(280px, 28vw, 360px);
 		--card-gap: 1.5rem;
@@ -249,37 +393,12 @@ const loop = [...pieces, ...pieces];
 		align-items: flex-start;
 		width: max-content;
 		will-change: transform;
-		animation: drop-scroll linear infinite;
-		animation-duration: calc(var(--n) * 8s);
-	}
-
-	@keyframes drop-scroll {
-		from {
-			transform: translate3d(0, 0, 0);
-		}
-		to {
-			transform: translate3d(calc(var(--n) * (var(--card-w) + var(--card-gap)) * -1), 0, 0);
-		}
-	}
-
-	.drop[data-state="paused"] .drop__rail {
-		animation-play-state: paused;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.drop__rail {
-			animation: none;
-		}
-		.drop__rail-wrap {
-			overflow-x: auto;
-		}
 	}
 
 	/* ---- card ---- */
 	.card {
 		flex: 0 0 var(--card-w);
 		width: var(--card-w);
-		user-select: none;
 		transform-origin: center top;
 		transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
 	}
@@ -306,6 +425,8 @@ const loop = [...pieces, ...pieces];
 		width: 100%;
 		text-align: left;
 		color: inherit;
+		/* allow the wrap's pointer handlers to consume drag */
+		touch-action: pan-y;
 	}
 
 	.card__figure {
@@ -323,7 +444,8 @@ const loop = [...pieces, ...pieces];
 		object-position: center 25%;
 		filter: saturate(0.95) contrast(1.02);
 		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1), filter 0.5s ease;
-		will-change: transform;
+		pointer-events: none;
+		-webkit-user-drag: none;
 	}
 
 	.card.is-expanded .card__img {
@@ -355,6 +477,7 @@ const loop = [...pieces, ...pieces];
 		opacity: 0.7;
 		letter-spacing: 0.12em;
 		align-items: center;
+		flex-wrap: wrap;
 	}
 
 	.dot {
@@ -454,6 +577,14 @@ const loop = [...pieces, ...pieces];
 
 	.card__cta:hover::before {
 		transform: translateY(0);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.drop__shift,
+		.card,
+		.card__details {
+			transition: none;
+		}
 	}
 
 	@media (max-width: 720px) {
