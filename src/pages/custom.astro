@@ -77,6 +77,25 @@ import {
 		-webkit-mask: url("/png/map_bg.png") center / cover no-repeat;
 		mask: url("/png/map_bg.png") center / cover no-repeat;
 		opacity: 0.35;
+		animation: contact-drift 25s ease-in-out infinite alternate;
+		will-change: mask-position;
+	}
+
+	@keyframes contact-drift {
+		from {
+			-webkit-mask-position: 0% 0%;
+			mask-position: 0% 0%;
+		}
+		to {
+			-webkit-mask-position: 100% 100%;
+			mask-position: 100% 100%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.contact__left::before {
+			animation: none;
+		}
 	}
 
 	.left__sticky {

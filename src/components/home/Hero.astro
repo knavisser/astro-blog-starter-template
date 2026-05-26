@@ -48,18 +48,29 @@ const {
 		if (!hero || !img) return;
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-		const START = 8; // matches initial CSS
-		const END = 62; // reveals chest/panel as user scrolls
+		const isMobile = window.matchMedia("(max-width: 720px)").matches;
+
 		let ticking = false;
-		const tick = () => {
-			const rect = hero.getBoundingClientRect();
-			const total = rect.height;
-			const scrolled = Math.max(0, -rect.top);
-			const progress = Math.min(1, total > 0 ? scrolled / total : 0);
-			const pos = START + (END - START) * progress;
-			img.style.objectPosition = `center ${pos.toFixed(2)}%`;
-			ticking = false;
-		};
+		const tick = isMobile
+			? () => {
+					const rect = hero.getBoundingClientRect();
+					const total = rect.height;
+					const scrolled = Math.max(0, -rect.top);
+					const progress = Math.min(1, total > 0 ? scrolled / total : 0);
+					// translate up to -15% of the (oversized) image height
+					const ty = progress * -15;
+					img.style.transform = `translate3d(0, ${ty.toFixed(2)}%, 0)`;
+					ticking = false;
+				}
+			: () => {
+					const rect = hero.getBoundingClientRect();
+					const total = rect.height;
+					const scrolled = Math.max(0, -rect.top);
+					const progress = Math.min(1, total > 0 ? scrolled / total : 0);
+					const pos = 8 + (62 - 8) * progress;
+					img.style.objectPosition = `center ${pos.toFixed(2)}%`;
+					ticking = false;
+				};
 		const onScroll = () => {
 			if (!ticking) {
 				requestAnimationFrame(tick);
@@ -227,6 +238,19 @@ const {
 		}
 		.hero__bottom-left {
 			max-width: 100%;
+		}
+		.hero__img {
+			width: calc(100% + 36px);
+			height: 120%;
+			object-position: 60% 50%;
+			animation: none;
+			will-change: transform;
+			filter: grayscale(0.05) contrast(1.05) saturate(0.95);
+		}
+		.hero__wordmark {
+			word-spacing: 100vw;
+			line-height: 0.95;
+			-webkit-text-stroke: 1.3px currentColor;
 		}
 	}
 
