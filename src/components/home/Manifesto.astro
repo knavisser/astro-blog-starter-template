@@ -53,7 +53,8 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 
 			const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 			const isMobile = window.matchMedia("(max-width: 720px)").matches;
-			if (reduced || isMobile) {
+
+			if (reduced) {
 				lines.forEach((l) => {
 					l.style.opacity = "1";
 					l.style.transform = "";
@@ -62,6 +63,26 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 					i.style.opacity = "1";
 					i.style.transform = "";
 				});
+				return;
+			}
+
+			if (isMobile) {
+				if (!("IntersectionObserver" in window)) {
+					section.classList.add("is-revealed-mobile");
+					return;
+				}
+				const io = new IntersectionObserver(
+					(entries) => {
+						entries.forEach((entry) => {
+							if (entry.isIntersecting) {
+								section.classList.add("is-revealed-mobile");
+								io.unobserve(section);
+							}
+						});
+					},
+					{ threshold: 0.1, rootMargin: "0px 0px -30% 0px" }
+				);
+				io.observe(section);
 				return;
 			}
 
@@ -273,13 +294,43 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		opacity: 0.5;
 	}
 
-	@media (prefers-reduced-motion: reduce),
-		(max-width: 720px) {
+	@media (prefers-reduced-motion: reduce) {
 		.line,
 		.side__inner > * {
 			opacity: 1 !important;
 			transform: none !important;
 		}
+	}
+
+	/* lightweight one-shot reveal for phones — no per-frame scroll work */
+	@media (max-width: 720px) {
+		.line,
+		.line[data-sentence="1"] {
+			transform: translate3d(0, 28px, 0);
+			transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.1, 1),
+				transform 0.8s cubic-bezier(0.2, 0.7, 0.1, 1);
+		}
+
+		.side__inner > * {
+			transform: translate3d(0, 20px, 0);
+			transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.1, 1),
+				transform 0.8s cubic-bezier(0.2, 0.7, 0.1, 1);
+		}
+
+		.manifesto.is-revealed-mobile .line,
+		.manifesto.is-revealed-mobile .side__inner > * {
+			opacity: 1;
+			transform: translate3d(0, 0, 0);
+		}
+
+		.manifesto.is-revealed-mobile .line-1 { transition-delay: 40ms; }
+		.manifesto.is-revealed-mobile .line-2 { transition-delay: 140ms; }
+		.manifesto.is-revealed-mobile .line-3 { transition-delay: 340ms; }
+		.manifesto.is-revealed-mobile .line-4 { transition-delay: 440ms; }
+		.manifesto.is-revealed-mobile .side__inner > *:nth-child(1) { transition-delay: 600ms; }
+		.manifesto.is-revealed-mobile .side__inner > *:nth-child(2) { transition-delay: 680ms; }
+		.manifesto.is-revealed-mobile .side__inner > *:nth-child(3) { transition-delay: 760ms; }
+		.manifesto.is-revealed-mobile .side__inner > *:nth-child(4) { transition-delay: 840ms; }
 	}
 
 	@media (max-width: 800px) {

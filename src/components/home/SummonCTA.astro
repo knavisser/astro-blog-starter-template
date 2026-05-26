@@ -53,24 +53,25 @@ import Icon from "../Icon.astro";
 	.summon::after {
 		content: "";
 		position: absolute;
-		inset: 0;
+		top: -25%;
+		left: -25%;
+		width: 150%;
+		height: 150%;
 		pointer-events: none;
 		background-color: var(--acid);
-		-webkit-mask: url("/png/map_bg.png") center / 160% 160% no-repeat;
-		mask: url("/png/map_bg.png") center / 160% 160% no-repeat;
+		-webkit-mask: url("/png/map_bg.png") center / cover no-repeat;
+		mask: url("/png/map_bg.png") center / cover no-repeat;
 		opacity: 0.3;
 		animation: summon-drift 90s ease-in-out infinite alternate;
-		will-change: mask-position;
+		will-change: transform;
 	}
 
 	@keyframes summon-drift {
 		from {
-			-webkit-mask-position: 0% 0%;
-			mask-position: 0% 0%;
+			transform: translate3d(-10%, -10%, 0);
 		}
 		to {
-			-webkit-mask-position: 100% 100%;
-			mask-position: 100% 100%;
+			transform: translate3d(10%, 10%, 0);
 		}
 	}
 

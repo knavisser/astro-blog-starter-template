@@ -90,7 +90,8 @@ const loop = [...pieces, ...pieces];
 
 		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 		const AUTO_VELOCITY = reduced ? 0 : 36; // px / s — idle drift speed
-		const DRAG_RATIO = 0.5; // 1.0 = rail follows pointer 1:1, 0.5 = rail moves half as much
+		const DRAG_RATIO_MOUSE = 0.5; // desktop: rail moves half the mouse delta — feels controlled
+		const DRAG_RATIO_TOUCH = 1.0; // mobile: rail follows the finger 1:1 — native-feeling swipe
 		const INERTIA_DECAY = 0.95; // per frame at 60 fps — lower = snappier stop
 		const VELOCITY_CLAMP = 2800; // px / s — momentum cap on a fast flick
 		const DRAG_THRESHOLD = 6; // px — movement before a tap becomes a drag
@@ -116,6 +117,7 @@ const loop = [...pieces, ...pieces];
 		let pointerLastX = 0;
 		let pointerLastT = 0;
 		let pointerStartPos = 0;
+		let dragRatio = DRAG_RATIO_MOUSE;
 
 		let expanded: HTMLElement | null = null;
 
@@ -205,11 +207,11 @@ const loop = [...pieces, ...pieces];
 				if (expanded) closeExpansion({ instant: true });
 			}
 			if (isDragging) {
-				pos = pointerStartPos + dx * DRAG_RATIO;
+				pos = pointerStartPos + dx * dragRatio;
 				const now = performance.now();
 				const dt = (now - pointerLastT) / 1000;
 				if (dt > 0) {
-					let instantV = (-(e.clientX - pointerLastX) / dt) * DRAG_RATIO;
+					let instantV = (-(e.clientX - pointerLastX) / dt) * dragRatio;
 					// EMA smoothing then clamp
 					dragVelocity = 0.7 * dragVelocity + 0.3 * instantV;
 					if (dragVelocity > VELOCITY_CLAMP) dragVelocity = VELOCITY_CLAMP;
@@ -243,6 +245,8 @@ const loop = [...pieces, ...pieces];
 			pointerLastT = performance.now();
 			pointerStartPos = pos;
 			dragVelocity = 0;
+			dragRatio =
+				e.pointerType === "mouse" ? DRAG_RATIO_MOUSE : DRAG_RATIO_TOUCH;
 			document.addEventListener("pointermove", onPointerMove);
 			document.addEventListener("pointerup", onPointerUp);
 			document.addEventListener("pointercancel", onPointerUp);
