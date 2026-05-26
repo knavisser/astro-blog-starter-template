@@ -5,14 +5,12 @@ import CrossCircle from "../components/sigils/CrossCircle.astro";
 import BarcodeBlock from "../components/sigils/BarcodeBlock.astro";
 import {
 	CONTACT_EMAIL,
-	INSTAGRAM_HANDLE,
-	INSTAGRAM_URL,
 	ATELIER_COORDS,
 	ATELIER_LABEL,
 } from "../consts";
 ---
 
-<Base title="contact" description="summon a piece. start a conversation.">
+<Base title="custom" description="summon a piece. start a conversation.">
 	<section class="contact" id="summon">
 		<div class="contact__left">
 			<div class="left__sticky">
@@ -25,8 +23,8 @@ import {
 				</h1>
 
 				<p class="lede" data-reveal>
-					Tell us about the silhouette, the dye, the horns, the weather it's
-					built for. We'll quote inside 48 hours.
+					Tell us about the silhouette, the horns, the hardware, about who
+					it's built for. We'll quote within 48 hours.
 				</p>
 
 				<dl class="reach mono" data-reveal-stagger>
@@ -34,14 +32,6 @@ import {
 						<dt>// EMAIL</dt>
 						<dd>
 							<a href={`mailto:${CONTACT_EMAIL}`} data-cursor="link">{CONTACT_EMAIL}</a>
-						</dd>
-					</div>
-					<div>
-						<dt>// INSTAGRAM</dt>
-						<dd>
-							<a href={INSTAGRAM_URL} target="_blank" rel="noopener" data-cursor="link"
-								>{INSTAGRAM_HANDLE}</a
-							>
 						</dd>
 					</div>
 					<div>
@@ -71,9 +61,22 @@ import {
 	}
 
 	.contact__left {
+		position: relative;
 		padding: var(--space-7) var(--gutter) var(--space-6);
 		background: var(--ink);
 		color: var(--bone);
+		overflow: hidden;
+	}
+
+	.contact__left::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-color: var(--acid);
+		-webkit-mask: url("/png/map_bg.png") center / cover no-repeat;
+		mask: url("/png/map_bg.png") center / cover no-repeat;
+		opacity: 0.35;
 	}
 
 	.left__sticky {
@@ -170,6 +173,10 @@ import {
 	.contact__right {
 		padding: var(--space-7) var(--gutter) var(--space-6);
 		background: var(--bone);
+	}
+
+	:global(.site-footer) {
+		margin-top: 0 !important;
 	}
 
 	@media (max-width: 1000px) {

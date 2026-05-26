@@ -5,16 +5,19 @@ export const prerender = false;
 
 const InquirySchema = z.object({
 	name: z.string().trim().min(1).max(160),
-	email: z.string().trim().email().max(320),
-	reference: z.string().trim().max(120).optional().default(""),
+	telegram: z.string().trim().min(2).max(80),
+	country: z.string().trim().min(1).max(80),
+	basedOnCharacter: z.string().trim().max(10).optional().default(""),
 	earStyle: z.string().trim().max(40).optional().default(""),
 	size: z.string().trim().max(8).optional().default(""),
-	deadline: z.string().trim().max(20).optional().default(""),
 	modifications: z.string().trim().max(4000).optional().default(""),
 	budget: z.string().trim().max(40).optional().default(""),
 	notes: z.string().trim().max(4000).optional().default(""),
 	company: z.string().max(0).optional().default(""), // honeypot — must be empty
 });
+
+const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
+const ATTACHMENT_FIELDS = new Set(["characterRefs", "modificationRefs"]);
 
 function escapeHtml(s: string): string {
 	return s
@@ -25,17 +28,21 @@ function escapeHtml(s: string): string {
 		.replace(/'/g, "&#39;");
 }
 
-function renderHtml(data: z.infer<typeof InquirySchema>): string {
+function renderHtml(
+	data: z.infer<typeof InquirySchema>,
+	attachmentNames: string[]
+): string {
 	const rows: Array<[string, string]> = [
 		["Name", data.name],
-		["Email", data.email],
-		["Reference piece", data.reference || "—"],
-		["Ear style", data.earStyle || "—"],
+		["Telegram", data.telegram],
+		["Country", data.country],
+		["Based on character", data.basedOnCharacter === "yes" ? "Yes" : "No"],
+		["Ear shape", data.earStyle || "—"],
 		["Size", data.size || "—"],
-		["Deadline", data.deadline || "—"],
 		["Budget tier", data.budget || "—"],
 		["Modifications", data.modifications || "—"],
 		["Notes", data.notes || "—"],
+		["Attachments", attachmentNames.length ? attachmentNames.join(", ") : "—"],
 	];
 	return `<!doctype html><html><body style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
 		<h2 style="font-family:'Michroma',sans-serif;letter-spacing:.18em;">NEW SUMMONS</h2>
@@ -58,15 +65,53 @@ function getEnv(locals: App.Locals, key: string): string | undefined {
 	return proc?.[key];
 }
 
+function arrayBufferToBase64(buf: ArrayBuffer): string {
+	const bytes = new Uint8Array(buf);
+	let binary = "";
+	const chunk = 0x8000;
+	for (let i = 0; i < bytes.length; i += chunk) {
+		binary += String.fromCharCode.apply(
+			null,
+			Array.from(bytes.subarray(i, i + chunk))
+		);
+	}
+	return btoa(binary);
+}
+
 export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
-	let raw: unknown;
+	let form: FormData;
 	try {
-		raw = await request.json();
+		form = await request.formData();
 	} catch {
-		return Response.json({ ok: false, error: "Invalid JSON." }, { status: 400 });
+		return Response.json(
+			{ ok: false, error: "Invalid form payload." },
+			{ status: 400 }
+		);
 	}
 
-	const parsed = InquirySchema.safeParse(raw);
+	const text: Record<string, string> = {};
+	const files: File[] = [];
+	let totalBytes = 0;
+
+	for (const [key, value] of form.entries()) {
+		if (value instanceof File) {
+			if (!ATTACHMENT_FIELDS.has(key)) continue;
+			if (value.size === 0) continue;
+			totalBytes += value.size;
+			files.push(value);
+		} else {
+			text[key] = value;
+		}
+	}
+
+	if (totalBytes > MAX_TOTAL_BYTES) {
+		return Response.json(
+			{ ok: false, error: "Attachments exceed 25MB total." },
+			{ status: 413 }
+		);
+	}
+
+	const parsed = InquirySchema.safeParse(text);
 	if (!parsed.success) {
 		return Response.json(
 			{ ok: false, error: "Missing or invalid fields." },
@@ -82,9 +127,16 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 	}
 
 	const ip = clientAddress || "unknown";
+	const attachmentNames = files.map((f) => f.name || "attachment");
 
-	// always log so dev users can see inquiries in `wrangler tail`
-	console.log("[INQUIRY]", JSON.stringify({ ...data, _ip: ip }, null, 2));
+	console.log(
+		"[INQUIRY]",
+		JSON.stringify(
+			{ ...data, _ip: ip, _attachments: attachmentNames, _bytes: totalBytes },
+			null,
+			2
+		)
+	);
 
 	const apiKey = getEnv(locals, "RESEND_API_KEY");
 	const toAddress = getEnv(locals, "INQUIRY_TO_EMAIL");
@@ -92,6 +144,12 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 		getEnv(locals, "INQUIRY_FROM_EMAIL") || "bad juju <inquiry@badjuju.dev>";
 
 	if (apiKey && toAddress) {
+		const attachments = await Promise.all(
+			files.map(async (f) => ({
+				filename: f.name || "attachment",
+				content: arrayBufferToBase64(await f.arrayBuffer()),
+			}))
+		);
 		try {
 			const resendRes = await fetch("https://api.resend.com/emails", {
 				method: "POST",
@@ -102,9 +160,9 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 				body: JSON.stringify({
 					from: fromAddress,
 					to: [toAddress],
-					reply_to: data.email,
 					subject: `// NEW SUMMONS — ${data.name}`,
-					html: renderHtml(data),
+					html: renderHtml(data, attachmentNames),
+					attachments: attachments.length ? attachments : undefined,
 				}),
 			});
 			if (!resendRes.ok) {

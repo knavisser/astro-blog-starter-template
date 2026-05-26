@@ -20,7 +20,7 @@ import Icon from "../Icon.astro";
 			take it from there.
 		</p>
 
-		<a class="cta" href="/commissions" data-cursor="link">
+		<a class="cta" href="/custom" data-cursor="link">
 			<span>REQUEST A PIECE</span>
 			<Icon name="arrow-up-right" size={20} />
 		</a>
@@ -50,8 +50,39 @@ import Icon from "../Icon.astro";
 		pointer-events: none;
 	}
 
+	.summon::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-color: var(--acid);
+		-webkit-mask: url("/png/map_bg.png") center / 160% 160% no-repeat;
+		mask: url("/png/map_bg.png") center / 160% 160% no-repeat;
+		opacity: 0.3;
+		animation: summon-drift 90s ease-in-out infinite alternate;
+		will-change: mask-position;
+	}
+
+	@keyframes summon-drift {
+		from {
+			-webkit-mask-position: 0% 0%;
+			mask-position: 0% 0%;
+		}
+		to {
+			-webkit-mask-position: 100% 100%;
+			mask-position: 100% 100%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.summon::after {
+			animation: none;
+		}
+	}
+
 	.summon__inner {
 		position: relative;
+		z-index: 1;
 		max-width: 1100px;
 		margin: 0 auto;
 		display: flex;
@@ -148,7 +179,7 @@ import Icon from "../Icon.astro";
 	}
 
 	.fineprint {
-		opacity: 0.45;
+		opacity: 0.75;
 		font-size: 0.62rem;
 		margin: 0;
 		margin-top: var(--space-3);

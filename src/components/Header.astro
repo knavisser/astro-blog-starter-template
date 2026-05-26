@@ -5,7 +5,7 @@ const pathname = Astro.url.pathname;
 const navLinks = [
 	{ href: "/", label: "WORKS" },
 	{ href: "/archive", label: "ARCHIVE" },
-	{ href: "/commissions", label: "COMMISSIONS" },
+	{ href: "/custom", label: "CUSTOM" },
 ];
 const isActive = (href: string) =>
 	href === "/" ? pathname === "/" : pathname.startsWith(href);

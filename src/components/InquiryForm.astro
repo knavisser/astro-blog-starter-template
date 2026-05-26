@@ -1,10 +1,5 @@
 ---
-import { getCollection } from "astro:content";
 import Icon from "./Icon.astro";
-
-const pieces = (await getCollection("pieces"))
-	.sort((a, b) => a.data.index - b.data.index)
-	.slice(0, 7);
 ---
 
 <form class="inquiry" id="inquiry" novalidate>
@@ -21,50 +16,65 @@ const pieces = (await getCollection("pieces"))
 				<input type="text" name="name" required placeholder="your name" data-cursor="link" />
 			</label>
 			<label class="field">
-				<span class="mono label">EMAIL</span>
-				<input type="email" name="email" required placeholder="you@somewhere.net" data-cursor="link" />
+				<span class="mono label">TELEGRAM</span>
+				<input
+					type="text"
+					name="telegram"
+					required
+					placeholder="@handle"
+					pattern="@?[A-Za-z0-9_]{3,}"
+					autocapitalize="off"
+					autocomplete="off"
+					data-cursor="link"
+				/>
 			</label>
 		</div>
-	</fieldset>
-
-	<fieldset class="field-group">
-		<legend class="mono">// REFERENCE</legend>
-		<p class="hint mono">Pick the closest existing piece — or "other."</p>
-		<div class="refs" role="radiogroup" aria-label="Reference piece">
-			{
-				pieces.map((piece) => (
-					<label class="ref">
-						<input
-							type="radio"
-							name="reference"
-							value={piece.id}
-							data-cursor="link"
-						/>
-						<span class="ref__inner">
-							<img class="ref__img" src={piece.data.heroImage} alt={piece.data.name} loading="lazy" />
-							<span class="ref__cap mono">
-								<span>/// {String(piece.data.index).padStart(2, "0")}</span>
-								<span>{piece.data.earStyle.toUpperCase()}</span>
-							</span>
-						</span>
-					</label>
-				))
-			}
-			<label class="ref ref--other">
-				<input type="radio" name="reference" value="other" data-cursor="link" />
-				<span class="ref__inner ref__inner--other">
-					<span class="display ref__other-title">OTHER</span>
-					<span class="mono ref__cap">FROM SCRATCH</span>
-				</span>
-			</label>
-		</div>
+		<label class="field">
+			<span class="mono label">COUNTRY</span>
+			<input
+				type="text"
+				name="country"
+				required
+				placeholder="for shipping quote"
+				data-cursor="link"
+			/>
+		</label>
 	</fieldset>
 
 	<fieldset class="field-group">
 		<legend class="mono">// SPEC</legend>
-		<div class="row row--3">
+
+		<label class="check">
+			<input
+				type="checkbox"
+				name="basedOnCharacter"
+				value="yes"
+				class="character-toggle"
+				data-cursor="link"
+			/>
+			<span class="mono check__label"
+				>My hoodie is based on a (custom) character</span
+			>
+		</label>
+
+		<label class="field character-upload">
+			<span class="mono label">CHARACTER REFERENCES</span>
+			<span class="upload-hint mono"
+				>Add references of your character here.</span
+			>
+			<input
+				type="file"
+				name="characterRefs"
+				multiple
+				accept="image/*,application/pdf"
+				class="file-input"
+				data-cursor="link"
+			/>
+		</label>
+
+		<div class="row">
 			<label class="field">
-				<span class="mono label">SPECIES</span>
+				<span class="mono label">EAR SHAPE</span>
 				<select name="earStyle" required data-cursor="link">
 					<option value="">choose…</option>
 					<option value="Canine">Canine</option>
@@ -73,6 +83,7 @@ const pieces = (await getCollection("pieces"))
 					<option value="Hyenid">Hyenid</option>
 					<option value="Jolteon">Jolteon</option>
 					<option value="Marsupial">Marsupial</option>
+					<option value="From scratch">From scratch (new pattern)</option>
 					<option value="Other">Other — describe in notes</option>
 				</select>
 			</label>
@@ -86,11 +97,8 @@ const pieces = (await getCollection("pieces"))
 					<option value="L">L</option>
 					<option value="XL">XL</option>
 					<option value="XXL">XXL</option>
+					<option value="3XL">3XL</option>
 				</select>
-			</label>
-			<label class="field">
-				<span class="mono label">DEADLINE</span>
-				<input type="date" name="deadline" data-cursor="link" />
 			</label>
 		</div>
 
@@ -99,8 +107,16 @@ const pieces = (await getCollection("pieces"))
 			<textarea
 				name="modifications"
 				rows="4"
-				placeholder="silhouette, ears or horns, hardware, weathering, stitching, references…"
+				placeholder="silhouette, ears, horns, hardware, weathering, stitching, references…"
 				data-cursor="link"></textarea>
+			<input
+				type="file"
+				name="modificationRefs"
+				multiple
+				accept="image/*,application/pdf"
+				class="file-input"
+				data-cursor="link"
+			/>
 		</label>
 	</fieldset>
 
@@ -108,16 +124,24 @@ const pieces = (await getCollection("pieces"))
 		<legend class="mono">// BUDGET</legend>
 		<div class="budgets" role="radiogroup" aria-label="Budget tier">
 			<label class="budget">
-				<input type="radio" name="budget" value="under-250" data-cursor="link" />
-				<span><strong>UNDER €250</strong><em>simple modifications</em></span>
+				<input type="radio" name="budget" value="under-150" data-cursor="link" />
+				<span><strong>UNDER €150</strong><em>simple modifications</em></span>
 			</label>
 			<label class="budget">
-				<input type="radio" name="budget" value="250-500" data-cursor="link" />
-				<span><strong>€250 – €500</strong><em>single piece, custom horn/ear</em></span>
+				<input type="radio" name="budget" value="150-200" data-cursor="link" />
+				<span
+					><strong>€150 – €200</strong><em
+						>custom horn/ear, cropping, hardware</em
+					></span
+				>
 			</label>
 			<label class="budget">
-				<input type="radio" name="budget" value="500-1000" data-cursor="link" />
-				<span><strong>€500 – €1000</strong><em>full custom build</em></span>
+				<input type="radio" name="budget" value="200-plus" data-cursor="link" />
+				<span
+					><strong>€200+</strong><em
+						>full custom build — choose your brand</em
+					></span
+				>
 			</label>
 			<label class="budget">
 				<input type="radio" name="budget" value="open" data-cursor="link" />
@@ -132,7 +156,7 @@ const pieces = (await getCollection("pieces"))
 			<textarea
 				name="notes"
 				rows="3"
-				placeholder="anything else we should know"
+				placeholder="sizing quirks, references — we modify existing silhouettes, not from scratch"
 				data-cursor="link"></textarea>
 		</label>
 	</fieldset>
@@ -143,7 +167,8 @@ const pieces = (await getCollection("pieces"))
 			<Icon name="arrow-up-right" size={18} />
 		</button>
 		<p class="mono submit__note">
-			You'll hear back inside 48 hours. No payment up front.
+			You'll hear back within 48 hours. Submitting a quote does not guarantee
+			custom work.
 		</p>
 	</div>
 
@@ -156,15 +181,7 @@ const pieces = (await getCollection("pieces"))
 		const result = document.getElementById("inquiry-result");
 		if (!form || !result) return;
 
-		// hydrate ?ref= URL param if present
-		const params = new URLSearchParams(window.location.search);
-		const refParam = params.get("ref");
-		if (refParam) {
-			const refInput = form.querySelector<HTMLInputElement>(
-				`input[name="reference"][value="${CSS.escape(refParam)}"]`
-			);
-			if (refInput) refInput.checked = true;
-		}
+		const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
 
 		form.addEventListener("submit", async (e) => {
 			e.preventDefault();
@@ -173,20 +190,29 @@ const pieces = (await getCollection("pieces"))
 			result.removeAttribute("data-state");
 
 			const fd = new FormData(form);
-			const payload = Object.fromEntries(fd.entries());
+
+			let totalBytes = 0;
+			for (const value of fd.values()) {
+				if (value instanceof File) totalBytes += value.size;
+			}
+			if (totalBytes > MAX_TOTAL_BYTES) {
+				result.setAttribute("data-state", "error");
+				result.textContent =
+					"// FILES TOO LARGE — KEEP ATTACHMENTS UNDER 25MB TOTAL.";
+				return;
+			}
 
 			try {
 				const res = await fetch("/api/inquiry", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify(payload),
+					body: fd,
 				});
 				const data = (await res.json()) as { ok: boolean; error?: string };
 				if (!res.ok || !data.ok) {
 					throw new Error(data.error || "Could not send.");
 				}
 				result.setAttribute("data-state", "success");
-				result.textContent = "// SUMMONS RECEIVED. WE'LL BE IN TOUCH INSIDE 48 HOURS.";
+				result.textContent = "// SUMMONS RECEIVED. WE'LL BE IN TOUCH WITHIN 48 HOURS.";
 				form.reset();
 			} catch (err) {
 				result.setAttribute("data-state", "error");
@@ -231,20 +257,10 @@ const pieces = (await getCollection("pieces"))
 		margin-bottom: var(--space-1);
 	}
 
-	.hint {
-		opacity: 0.5;
-		font-size: 0.65rem;
-		margin: 0 0 var(--space-1);
-	}
-
 	.row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: var(--space-2);
-	}
-
-	.row--3 {
-		grid-template-columns: 1fr 1fr 1fr;
 	}
 
 	.field {
@@ -292,68 +308,72 @@ const pieces = (await getCollection("pieces"))
 		outline: none;
 	}
 
-	.refs {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 0.6rem;
-	}
-
-	.ref {
-		cursor: pointer;
-	}
-
-	.ref input {
-		position: absolute;
-		opacity: 0;
-		pointer-events: none;
-	}
-
-	.ref__inner {
+	.check {
 		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		padding: 0.4rem;
-		border: 1px solid var(--rule);
+		align-items: center;
+		gap: 0.6rem;
+		cursor: pointer;
+		padding: 0.4rem 0;
+	}
+
+	.check input {
+		width: 1rem;
+		height: 1rem;
+		accent-color: var(--ink);
+		margin: 0;
+	}
+
+	.check__label {
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
+	}
+
+	.character-upload {
+		display: none;
+	}
+
+	.field-group:has(.character-toggle:checked) .character-upload {
+		display: flex;
+		margin-bottom: 1.25rem;
+	}
+
+	.upload-hint {
+		font-size: 0.62rem;
+		opacity: 0.55;
+		letter-spacing: 0.04em;
+		margin-top: -0.1rem;
+	}
+
+	.file-input {
+		font-family: var(--font-mono);
+		font-size: 0.7rem;
+		color: var(--ink);
+		padding: 0.4rem 0;
+		border: 0;
+		border-bottom: 1px dashed var(--rule-strong);
+		background: transparent;
+		transition: border-color 0.25s ease;
+	}
+
+	.file-input::file-selector-button {
+		font: inherit;
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--ink);
+		background: transparent;
+		border: 1px solid var(--rule-strong);
+		padding: 0.4rem 0.8rem;
+		margin-right: 0.6rem;
+		cursor: pointer;
 		transition: border-color 0.25s ease, background 0.25s ease;
 	}
 
-	.ref:hover .ref__inner,
-	.ref input:focus-visible + .ref__inner {
+	.file-input::file-selector-button:hover {
 		border-color: var(--ink);
-	}
-
-	.ref input:checked + .ref__inner {
-		border-color: var(--ink);
-		background: var(--acid);
-	}
-
-	.ref__img {
-		width: 100%;
-		aspect-ratio: 4 / 5;
-		object-fit: cover;
-		object-position: center 28%;
-		display: block;
-	}
-
-	.ref__cap {
-		display: flex;
-		justify-content: space-between;
-		font-size: 0.55rem;
-		letter-spacing: 0.1em;
-		opacity: 0.7;
-	}
-
-	.ref__inner--other {
-		justify-content: center;
-		align-items: center;
-		aspect-ratio: 4 / 5;
-		text-align: center;
-		gap: 0.4rem;
-	}
-
-	.ref__other-title {
-		font-size: 1rem;
-		letter-spacing: 0.2em;
+		background: var(--ink);
+		color: var(--bone);
 	}
 
 	.budgets {
@@ -481,12 +501,8 @@ const pieces = (await getCollection("pieces"))
 	}
 
 	@media (max-width: 800px) {
-		.row,
-		.row--3 {
+		.row {
 			grid-template-columns: 1fr;
-		}
-		.refs {
-			grid-template-columns: repeat(2, 1fr);
 		}
 		.budgets {
 			grid-template-columns: 1fr;
