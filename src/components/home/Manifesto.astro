@@ -4,34 +4,149 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 ---
 
 <section class="manifesto" id="manifesto">
-	<div class="manifesto__top mono" data-reveal>
-		<span>// I. MANIFESTO</span>
-		<span>EST. 2026</span>
+	<div class="manifesto__grid">
+		<div class="manifesto__top mono" data-reveal>
+			<span>// I. MANIFESTO</span>
+			<span>EST. 2026</span>
+		</div>
+
+		<div class="manifesto__body" id="manifesto-body">
+			<p class="display line line-1" data-sentence="0">
+				ONE <em>of</em> ONE
+			</p>
+			<p class="display line line-2" data-sentence="0">
+				HOODIES.
+			</p>
+			<p class="display line line-3" data-sentence="1">
+				BRING <em>out your</em>
+			</p>
+			<p class="display line line-4" data-sentence="1">
+				INNER BEAST<span class="acid">.</span>
+			</p>
+		</div>
+
+		<aside class="manifesto__side" id="manifesto-side">
+			<div class="side__inner">
+				<WireHorn size={120} class="horn" />
+				<p class="mono note">
+					BAD JUJU IS A SMALL ATELIER. EVERY PIECE IS CUT, STITCHED, AND
+					SUMMONED BY HAND.
+				</p>
+				<BarcodeBlock size={120} seed="BJ-CYCLE-I" class="bar" />
+				<p class="mono code">REF // BJ-CYCLE-I-2026</p>
+			</div>
+		</aside>
 	</div>
 
-	<div class="manifesto__body" data-reveal-stagger>
-		<p class="display line line-1">
-			ONE <em>of</em> ONE
-		</p>
-		<p class="display line line-2">
-			HOODIES.
-		</p>
-		<p class="display line line-3">
-			BRING <em>out your</em>
-		</p>
-		<p class="display line line-4">
-			INNER BEAST<span class="acid">.</span>
-		</p>
-	</div>
+	<script>
+		function bindManifestoScroll() {
+			const section = document.querySelector(".manifesto") as HTMLElement | null;
+			const body = document.getElementById("manifesto-body");
+			const aside = document.getElementById("manifesto-side");
+			if (!section || !body || !aside) return;
+			const sideInner = aside.querySelector<HTMLElement>(".side__inner");
+			if (!sideInner) return;
 
-	<aside class="manifesto__side">
-		<WireHorn size={120} class="horn" />
-		<p class="mono note" data-reveal>
-			BAD JUJU IS A SMALL ATELIER. EVERY PIECE IS CUT, STITCHED, AND SUMMONED BY HAND.
-		</p>
-		<BarcodeBlock size={120} seed="BJ-CYCLE-I" class="bar" />
-		<p class="mono code">REF // BJ-CYCLE-I-2026</p>
-	</aside>
+			const lines = Array.from(body.querySelectorAll<HTMLElement>(".line"));
+			const sideItems = Array.from(sideInner.children) as HTMLElement[];
+			if (!lines.length || !sideItems.length) return;
+
+			const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			const isMobile = window.matchMedia("(max-width: 720px)").matches;
+			if (reduced || isMobile) {
+				lines.forEach((l) => {
+					l.style.opacity = "1";
+					l.style.transform = "";
+				});
+				sideItems.forEach((i) => {
+					i.style.opacity = "1";
+					i.style.transform = "";
+				});
+				return;
+			}
+
+			// --- tunables ---------------------------------------------------------
+			// reveal window: section.top values where progress = 0 (start) and = 1 (end).
+			// widen this window to slow the velocity. lower SCROLL_START to delay onset,
+			// lower SCROLL_END to extend the run-out.
+			const SCROLL_START = 0.55;
+			const SCROLL_END = -0.4;
+
+			// per-sentence cascade
+			const SENTENCE_STAGGER = 0.15;
+			const LINE_IN_SENTENCE_STAGGER = 0.07;
+			const LINE_RANGE = 0.4;
+			const LINE_TRANSLATE_PX = 280;
+			const LINE_SETTLE_PX = 22;
+
+			// sticky aside item reveal
+			const SIDE_START = 0.16;
+			const SIDE_STAGGER = 0.07;
+			const SIDE_RANGE = 0.45;
+			const SIDE_TRANSLATE_PX = 60;
+			// ---------------------------------------------------------------------
+
+			const lerp = (v: number, a: number, b: number) =>
+				v <= a ? 0 : v >= b ? 1 : (v - a) / (b - a);
+
+			let ticking = false;
+			const tick = () => {
+				const rect = section.getBoundingClientRect();
+				const viewH = window.innerHeight || document.documentElement.clientHeight;
+				const overall = Math.max(
+					0,
+					Math.min(
+						1,
+						(SCROLL_START * viewH - rect.top) /
+							((SCROLL_START - SCROLL_END) * viewH)
+					)
+				);
+
+				lines.forEach((line, i) => {
+					const sentenceIdx = parseInt(line.dataset.sentence || "0", 10);
+					const dir = sentenceIdx === 0 ? -1 : 1;
+					const lineInSentence = i - sentenceIdx * 2;
+					const start =
+						sentenceIdx * SENTENCE_STAGGER +
+						lineInSentence * LINE_IN_SENTENCE_STAGGER;
+					const end = start + LINE_RANGE;
+					let lp = (overall - start) / (end - start);
+					lp = Math.max(0, Math.min(1, lp));
+					const eased = 1 - Math.pow(1 - lp, 3);
+					const tx = dir * LINE_TRANSLATE_PX * (1 - eased);
+					const ty = LINE_SETTLE_PX * (1 - eased);
+					line.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
+					line.style.opacity = eased.toFixed(3);
+				});
+
+				sideItems.forEach((item, i) => {
+					const start = SIDE_START + i * SIDE_STAGGER;
+					const end = start + SIDE_RANGE;
+					let lp = (overall - start) / (end - start);
+					lp = Math.max(0, Math.min(1, lp));
+					const eased = 1 - Math.pow(1 - lp, 3);
+					const tx = SIDE_TRANSLATE_PX * (1 - eased);
+					item.style.transform = `translate3d(${tx.toFixed(1)}px, 0, 0)`;
+					item.style.opacity = eased.toFixed(3);
+				});
+
+				ticking = false;
+			};
+
+			const onScroll = () => {
+				if (!ticking) {
+					requestAnimationFrame(tick);
+					ticking = true;
+				}
+			};
+			window.addEventListener("scroll", onScroll, { passive: true });
+			window.addEventListener("resize", onScroll, { passive: true });
+			tick();
+		}
+
+		bindManifestoScroll();
+		document.addEventListener("astro:after-swap", bindManifestoScroll);
+	</script>
 </section>
 
 <style>
@@ -40,6 +155,9 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		padding: var(--space-8) var(--gutter) var(--space-7);
 		background: var(--bone);
 		color: var(--ink);
+	}
+
+	.manifesto__grid {
 		display: grid;
 		grid-template-columns: 6fr 1fr;
 		gap: var(--space-5);
@@ -70,6 +188,13 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		letter-spacing: 0.04em;
 		line-height: 0.92;
 		font-style: normal;
+		opacity: 0;
+		transform: translate3d(-280px, 22px, 0);
+		will-change: opacity, transform;
+	}
+
+	.line[data-sentence="1"] {
+		transform: translate3d(280px, 22px, 0);
 	}
 
 	.line em {
@@ -101,12 +226,26 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		color: var(--chrome-3);
 	}
 
+	/* sticky aside --------------------------------------------------------- */
 	.manifesto__side {
+		position: relative;
+		align-self: start;
+	}
+
+	.side__inner {
+		position: sticky;
+		top: calc(var(--header-h) + var(--space-3));
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
 		align-items: flex-start;
 		padding-top: 1rem;
+	}
+
+	.side__inner > * {
+		opacity: 0;
+		transform: translate3d(60px, 0, 0);
+		will-change: opacity, transform;
 	}
 
 	:global(.manifesto__side .horn) {
@@ -134,10 +273,21 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		opacity: 0.5;
 	}
 
+	@media (prefers-reduced-motion: reduce),
+		(max-width: 720px) {
+		.line,
+		.side__inner > * {
+			opacity: 1 !important;
+			transform: none !important;
+		}
+	}
+
 	@media (max-width: 800px) {
 		.manifesto {
-			grid-template-columns: 1fr;
 			padding-block: var(--space-6) var(--space-5);
+		}
+		.manifesto__grid {
+			grid-template-columns: 1fr;
 		}
 		.note {
 			max-width: 34ch;
@@ -150,6 +300,9 @@ import BarcodeBlock from "../sigils/BarcodeBlock.astro";
 		}
 		.line-4 {
 			padding-left: 0.6em;
+		}
+		.manifesto__side {
+			display: none;
 		}
 	}
 </style>

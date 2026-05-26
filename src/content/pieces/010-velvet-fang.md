@@ -1,0 +1,15 @@
+---
+name: "OBJECT 010 — VELVET FANG"
+index: 10
+earStyle: Feline
+materials:
+  - "graphite-dyed cotton fleece"
+  - "short pointed feline ears with inner velvet"
+  - "small studded maw appliqué on the chest"
+heroImage: "/images/hoodie10.jpg"
+summary: "graphite body. ears short and pointed, lined in velvet. a small studded maw at the chest, jaws open."
+status: featured
+dateCompleted: 2026-05-18
+---
+
+Feline ears cut narrow and short, set flat against the hood with inner panels of crushed velvet. The chest carries a small stitched maw — open, studded along the gum-line, watching from the breastbone.

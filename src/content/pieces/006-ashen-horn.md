@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 006 — ASHEN HORN"
 index: 6
-earStyle: Hyena
+earStyle: Hyenid
 materials:
   - "stone-washed cotton fleece"
   - "twin studded horns"

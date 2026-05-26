@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 003 — RED LOYALTY"
 index: 3
-earStyle: Dragon
+earStyle: Draconid
 materials:
   - "hand tie-dyed cotton fleece"
   - "studded horns"

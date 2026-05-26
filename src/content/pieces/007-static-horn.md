@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 007 — STATIC HORN"
 index: 7
-earStyle: Doberman
+earStyle: Canine
 materials:
   - "hand-bleached cotton fleece"
   - "graphite tie-dye"

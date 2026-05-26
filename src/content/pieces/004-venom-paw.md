@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 004 — VENOM PAW"
 index: 4
-earStyle: Dragon
+earStyle: Draconid
 materials:
   - "hand tie-dyed acid cotton"
   - "ear cones with inner pink lining"

@@ -120,19 +120,17 @@ img {
 	color: var(--acid);
 }
 
-::-webkit-scrollbar {
-	width: 8px;
-	height: 8px;
+/* hide scrollbars across browsers — content still scrolls */
+html {
+	scrollbar-width: none;
+	-ms-overflow-style: none;
 }
-::-webkit-scrollbar-track {
-	background: transparent;
-}
-::-webkit-scrollbar-thumb {
-	background: var(--chrome-2);
-	border-radius: 0;
-}
-::-webkit-scrollbar-thumb:hover {
-	background: var(--ink);
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+	display: none;
+	width: 0;
+	height: 0;
 }
 
 /* utility primitives */

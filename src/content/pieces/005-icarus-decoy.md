@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 005 — ICARUS DECOY"
 index: 5
-earStyle: "Feline with custom maw"
+earStyle: Feline
 materials:
   - "bleached cotton with hand-painted wing"
   - "single horn pulled long"

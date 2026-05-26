@@ -2,9 +2,9 @@
 import { getCollection } from "astro:content";
 import Icon from "../Icon.astro";
 
-const pieces = (await getCollection("pieces"))
-	.filter((p) => p.data.status === "featured" || p.data.status === "available")
-	.sort((a, b) => a.data.index - b.data.index);
+const pieces = (await getCollection("pieces")).sort(
+	(a, b) => a.data.index - b.data.index
+);
 
 const total = pieces.length;
 // duplicate items for a seamless marquee loop
@@ -12,16 +12,18 @@ const loop = [...pieces, ...pieces];
 ---
 
 <section class="drop" id="drop" data-state="running">
-	<header class="drop__head">
-		<div class="drop__head-left">
-			<p class="mono drop__kicker">// II. CYCLE I</p>
-			<h2 class="display drop__title">FEATURED · DROP</h2>
-		</div>
-		<div class="drop__head-right mono">
-			<p>{String(total).padStart(2, "0")} PIECES · INFINITE LOOP</p>
-			<p>DRAG TO SCRUB · TAP TO FOCUS ↦</p>
-		</div>
-	</header>
+	<div class="drop__head-wrap">
+		<header class="drop__head">
+			<div class="drop__head-left">
+				<p class="mono drop__kicker">// II. CYCLE I</p>
+				<h2 class="display drop__title">FEATURED · DROP</h2>
+			</div>
+			<div class="drop__head-right mono">
+				<p>{String(total).padStart(2, "0")} PIECES · INFINITE LOOP</p>
+				<p>DRAG TO SCRUB · TAP TO FOCUS ↦</p>
+			</div>
+		</header>
+	</div>
 
 	<div class="drop__rail-wrap" id="drop-wrap">
 		<div class="drop__shift" id="drop-shift">
@@ -312,13 +314,17 @@ const loop = [...pieces, ...pieces];
 		overflow: hidden;
 	}
 
+	.drop__head-wrap {
+		padding-inline: var(--gutter);
+	}
+
 	.drop__head {
 		display: flex;
 		justify-content: space-between;
 		align-items: end;
-		padding: 0 var(--gutter) var(--space-4);
 		max-width: var(--max-w);
 		margin: 0 auto;
+		padding-bottom: var(--space-4);
 		gap: var(--space-3);
 	}
 

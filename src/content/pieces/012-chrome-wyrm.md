@@ -1,0 +1,15 @@
+---
+name: "OBJECT 012 — CHROME WYRM"
+index: 12
+earStyle: Draconid
+materials:
+  - "bleach-cracked heavyweight cotton"
+  - "twin spiked horns"
+  - "metallic foil scale strip down the spine"
+heroImage: "/images/hoodie12.jpg"
+summary: "bleach-cracked body. twin spiked horns. a metallic foil scale strip running down the spine like a fault line."
+status: featured
+dateCompleted: 2026-05-25
+---
+
+Bleach rubbed in with a wire brush until the body cracked open in lightning patterns. Twin spiked horns set tall and lean. A strip of metallic foil-printed scale runs down the spine — chrome, sharp, the seam of a slow earthquake.

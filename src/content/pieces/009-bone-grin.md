@@ -1,0 +1,15 @@
+---
+name: "OBJECT 009 — BONE GRIN"
+index: 9
+earStyle: Hyenid
+materials:
+  - "bone-coloured cotton fleece"
+  - "pointed hyenid ears with black-tipped nap"
+  - "thin stitched grin along the hood line"
+heroImage: "/images/hoodie9.jpg"
+summary: "bone-and-soot body. pointed ears with black tips. a thin grin stitched across the hood-line for the wearer alone."
+status: available
+dateCompleted: 2026-05-12
+---
+
+Hyenid ears pulled tall and pointed, hand-painted at the tips with carbon black. A grin sewn in slack thread along the inside of the hood line — only visible to the wearer when the hood comes up.

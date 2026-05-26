@@ -1,7 +1,7 @@
 ---
 name: "OBJECT 002 — BLACK HORN"
 index: 2
-earStyle: Doberman
+earStyle: Canine
 materials:
   - "420gsm brushed cotton"
   - "twin hand-shaped horns"
