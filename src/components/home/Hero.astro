@@ -50,6 +50,17 @@ const {
 
 		const isMobile = window.matchMedia("(max-width: 720px)").matches;
 
+		// Mobile framing: squarer aspect ratios (iPhone SE @ 375×667 ≈ 0.56)
+		// need to nudge the hoodie right; tall phones (≈9:16 ≈ 0.46) center it.
+		// Linearly interpolate object-position X between those anchors, clamped.
+		const applyMobileFraming = () => {
+			if (!isMobile) return;
+			const aspect = window.innerWidth / window.innerHeight;
+			const x = Math.max(50, Math.min(65, 50 + (aspect - 0.46) * 100));
+			img.style.objectPosition = `${x.toFixed(1)}% 50%`;
+		};
+		applyMobileFraming();
+
 		let ticking = false;
 		const tick = isMobile
 			? () => {
@@ -78,7 +89,14 @@ const {
 			}
 		};
 		window.addEventListener("scroll", onScroll, { passive: true });
-		window.addEventListener("resize", onScroll, { passive: true });
+		window.addEventListener(
+			"resize",
+			() => {
+				applyMobileFraming();
+				onScroll();
+			},
+			{ passive: true }
+		);
 		tick();
 	}
 
@@ -242,7 +260,7 @@ const {
 		.hero__img {
 			width: calc(100% + 36px);
 			height: 120%;
-			object-position: 60% 50%;
+			object-position: 50% 50%;
 			animation: none;
 			will-change: transform;
 			filter: grayscale(0.05) contrast(1.05) saturate(0.95);
