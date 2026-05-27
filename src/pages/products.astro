@@ -1,0 +1,654 @@
+---
+import Base from "../layouts/Base.astro";
+import { getCollection } from "astro:content";
+import Cardinal from "../components/sigils/Cardinal.astro";
+
+const pieces = await getCollection("pieces");
+
+const availablePieces = pieces
+	.filter((p) => p.data.status === "available")
+	.sort((a, b) => a.data.index - b.data.index);
+
+const archivePieces = pieces
+	.filter((p) => p.data.status === "archive" || p.data.status === "featured")
+	.sort((a, b) => {
+		if (a.data.status === b.data.status) return a.data.index - b.data.index;
+		return a.data.status === "featured" ? -1 : 1;
+	});
+
+const stats = {
+	total: pieces.length,
+	available: availablePieces.length,
+	archive: archivePieces.length,
+};
+
+const availableMode =
+	availablePieces.length === 0
+		? "empty"
+		: availablePieces.length === 1
+			? "hero-single"
+			: availablePieces.length === 2
+				? "hero-pair"
+				: "grid";
+---
+
+<Base
+	title="products"
+	description="one of one hoodies. available now and from the archive."
+>
+	<section class="hero-strip">
+		<div class="hero-strip__inner">
+			<p class="mono kicker" data-reveal>// PORTFOLIO · PRODUCTS</p>
+			<h1 class="display title" data-reveal>THE · COLLECTION</h1>
+			<p class="lede" data-reveal>
+				Currently available pieces below. Past pieces in the archive — one of one,
+				no restocks, future iterations by inquiry.
+			</p>
+
+			<dl class="stats mono" data-reveal-stagger>
+				<div>
+					<dt>// TOTAL</dt>
+					<dd>{String(stats.total).padStart(3, "0")}</dd>
+				</div>
+				<div>
+					<dt>// AVAILABLE</dt>
+					<dd>{String(stats.available).padStart(3, "0")}</dd>
+				</div>
+				<div>
+					<dt>// ARCHIVED</dt>
+					<dd>{String(stats.archive).padStart(3, "0")}</dd>
+				</div>
+			</dl>
+
+			<Cardinal size={220} class="divider" />
+		</div>
+	</section>
+
+	<section class="section section--available">
+		<header class="section__head">
+			<p class="mono section__kicker">// I. CURRENTLY AVAILABLE</p>
+			<h2 class="display section__title">AVAILABLE · PIECES</h2>
+		</header>
+
+		{
+			availableMode === "empty" && (
+				<div class="empty">
+					<p class="mono empty__label">// CURRENTLY AVAILABLE</p>
+					<p class="display empty__headline">NO PIECES AVAILABLE</p>
+					<p class="empty__sub">
+						Next drop by inquiry. Past pieces below.
+					</p>
+					<a class="empty__cta mono" href="/custom#summon" data-cursor="link">
+						<span>REQUEST A PIECE</span>
+						<span class="empty__cta-arrow" aria-hidden="true">→</span>
+					</a>
+				</div>
+			)
+		}
+
+		{
+			(availableMode === "hero-single" || availableMode === "hero-pair") && (
+				<ol class:list={["available-grid", `available-grid--${availableMode}`]}>
+					{availablePieces.map((piece) => (
+						<li class="hero-tile">
+							<a
+								class="hero-tile__link"
+								href={`/products/${piece.id}`}
+								data-cursor="zoom"
+								data-cursor-label="VIEW"
+							>
+								<figure class="hero-tile__figure">
+									<img
+										class="hero-tile__img"
+										src={piece.data.heroImage}
+										alt={piece.data.name}
+										loading="eager"
+									/>
+									<span class="mono hero-tile__status">AVAILABLE</span>
+								</figure>
+								<div class="hero-tile__caption mono">
+									<span class="hero-tile__idx">
+										/// {String(piece.data.index).padStart(3, "0")}
+									</span>
+									<span class="hero-tile__name">{piece.data.name}</span>
+									<span class="hero-tile__sub">
+										{piece.data.earStyle.toUpperCase()} · ONE OF ONE
+									</span>
+								</div>
+							</a>
+						</li>
+					))}
+				</ol>
+			)
+		}
+
+		{
+			availableMode === "grid" && (
+				<ol class="grid">
+					{availablePieces.map((piece, i) => (
+						<li
+							class:list={[
+								"tile",
+								{ "tile--tall": i % 3 === 1, "tile--wide": i % 5 === 4 },
+							]}
+						>
+							<a
+								class="tile__link"
+								href={`/products/${piece.id}`}
+								data-cursor="zoom"
+								data-cursor-label="VIEW"
+							>
+								<figure class="tile__figure">
+									<img
+										class="tile__img"
+										src={piece.data.heroImage}
+										alt={piece.data.name}
+										loading={i < 3 ? "eager" : "lazy"}
+									/>
+									<span
+										class:list={[
+											"mono",
+											"tile__status",
+											`is-${piece.data.status}`,
+										]}
+									>
+										{piece.data.status.toUpperCase()}
+									</span>
+								</figure>
+								<div class="tile__caption mono">
+									<span class="tile__idx">
+										/// {String(piece.data.index).padStart(3, "0")}
+									</span>
+									<span class="tile__name">{piece.data.name}</span>
+									<span class="tile__sub">
+										{piece.data.earStyle.toUpperCase()} · DIY STITCH
+									</span>
+								</div>
+							</a>
+						</li>
+					))}
+				</ol>
+			)
+		}
+	</section>
+
+	<section class="section section--archive">
+		<header class="section__head">
+			<p class="mono section__kicker">// II. ARCHIVE</p>
+			<h2 class="display section__title">ARCHIVE · PIECES</h2>
+		</header>
+
+		<ol class="grid">
+			{
+				archivePieces.map((piece, i) => (
+					<li
+						class:list={[
+							"tile",
+							{ "tile--tall": i % 3 === 1, "tile--wide": i % 5 === 4 },
+						]}
+					>
+						<a
+							class="tile__link"
+							href={`/products/${piece.id}`}
+							data-cursor="zoom"
+							data-cursor-label="VIEW"
+						>
+							<figure class="tile__figure">
+								<img
+									class="tile__img"
+									src={piece.data.heroImage}
+									alt={piece.data.name}
+									loading={i < 3 ? "eager" : "lazy"}
+								/>
+								<span
+									class:list={[
+										"mono",
+										"tile__status",
+										`is-${piece.data.status}`,
+									]}
+								>
+									{piece.data.status.toUpperCase()}
+								</span>
+							</figure>
+							<div class="tile__caption mono">
+								<span class="tile__idx">
+									/// {String(piece.data.index).padStart(3, "0")}
+								</span>
+								<span class="tile__name">{piece.data.name}</span>
+								<span class="tile__sub">
+									{piece.data.earStyle.toUpperCase()} · DIY STITCH
+								</span>
+							</div>
+						</a>
+					</li>
+				))
+			}
+		</ol>
+	</section>
+</Base>
+
+<style>
+	.hero-strip {
+		padding: calc(var(--header-h) + var(--space-6)) var(--gutter) var(--space-5);
+		background: var(--bone);
+	}
+
+	.hero-strip__inner {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-2);
+	}
+
+	.kicker {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.title {
+		margin: 0;
+		font-size: clamp(2.4rem, 7vw, 6rem);
+		letter-spacing: 0.06em;
+	}
+
+	.lede {
+		max-width: 52ch;
+		font-size: 0.95rem;
+		opacity: 0.7;
+		margin: 0;
+		line-height: 1.55;
+	}
+
+	.stats {
+		display: flex;
+		gap: var(--space-5);
+		margin: var(--space-4) 0 0;
+		font-size: 0.7rem;
+		padding: 0;
+	}
+
+	.stats > div {
+		text-align: center;
+	}
+
+	.stats dt {
+		opacity: 0.45;
+		margin-bottom: 0.3rem;
+	}
+
+	.stats dd {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.3rem;
+		letter-spacing: 0.12em;
+	}
+
+	:global(.hero-strip .divider) {
+		color: var(--chrome-3);
+		opacity: 0.6;
+		margin-top: var(--space-3);
+	}
+
+	/* ---- sections ---- */
+	.section {
+		padding: var(--space-5) var(--gutter) var(--space-6);
+		background: var(--bone);
+	}
+
+	.section--archive {
+		padding-bottom: var(--space-8);
+	}
+
+	.section__head {
+		max-width: var(--max-w);
+		margin: 0 auto var(--space-4);
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		border-top: 1px solid var(--rule);
+		padding-top: var(--space-4);
+	}
+
+	.section__kicker {
+		opacity: 0.5;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.section__title {
+		margin: 0;
+		font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+		letter-spacing: 0.08em;
+	}
+
+	/* ---- empty state ---- */
+	.empty {
+		max-width: 640px;
+		margin: var(--space-3) auto var(--space-2);
+		padding: var(--space-6) var(--space-4);
+		border: 1px solid var(--rule-strong);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-2);
+		background: var(--bone);
+		position: relative;
+	}
+
+	.empty::before,
+	.empty::after {
+		content: "";
+		position: absolute;
+		width: 14px;
+		height: 14px;
+		border: 1px solid var(--rule-strong);
+		background: var(--bone);
+	}
+
+	.empty::before {
+		top: -8px;
+		left: -8px;
+	}
+
+	.empty::after {
+		bottom: -8px;
+		right: -8px;
+	}
+
+	.empty__label {
+		opacity: 0.45;
+		font-size: 0.65rem;
+		margin: 0;
+		letter-spacing: 0.2em;
+	}
+
+	.empty__headline {
+		margin: 0;
+		font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+		letter-spacing: 0.08em;
+		line-height: 1.05;
+	}
+
+	.empty__sub {
+		margin: 0;
+		font-size: 0.85rem;
+		opacity: 0.65;
+		max-width: 36ch;
+	}
+
+	.empty__cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-top: var(--space-2);
+		padding: 0.75rem 1.2rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.22em;
+		color: var(--bone);
+		background: var(--ink);
+		position: relative;
+		overflow: hidden;
+		transition: color 0.4s ease;
+	}
+
+	.empty__cta::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--acid);
+		transform: translateY(101%);
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+		z-index: 0;
+	}
+
+	.empty__cta > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.empty__cta:hover {
+		color: var(--ink);
+	}
+
+	.empty__cta:hover::before {
+		transform: translateY(0);
+	}
+
+	.empty__cta-arrow {
+		transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.empty__cta:hover .empty__cta-arrow {
+		transform: translateX(4px);
+	}
+
+	/* ---- available hero grid (1-2 pieces) ---- */
+	.available-grid {
+		list-style: none;
+		padding: 0;
+		margin: 0 auto;
+		max-width: var(--max-w);
+		display: grid;
+		gap: var(--space-4);
+	}
+
+	.available-grid--hero-single {
+		grid-template-columns: minmax(0, 520px);
+		justify-content: center;
+	}
+
+	.available-grid--hero-pair {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		max-width: 980px;
+	}
+
+	.hero-tile__link {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		height: 100%;
+	}
+
+	.hero-tile__figure {
+		position: relative;
+		margin: 0;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--chrome-1);
+	}
+
+	.hero-tile__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.hero-tile:hover .hero-tile__img {
+		transform: scale(1.04);
+	}
+
+	.hero-tile__status {
+		position: absolute;
+		top: 1rem;
+		left: 1rem;
+		font-size: 0.6rem;
+		padding: 0.35rem 0.7rem;
+		background: var(--acid);
+		color: var(--ink);
+		letter-spacing: 0.22em;
+		border: 1px solid rgba(10, 9, 8, 0.1);
+	}
+
+	.hero-tile__caption {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-size: 0.78rem;
+		letter-spacing: 0.08em;
+	}
+
+	.hero-tile__idx {
+		opacity: 0.5;
+		font-size: 0.65rem;
+	}
+
+	.hero-tile__name {
+		font-family: var(--font-display);
+		font-size: 1rem;
+		letter-spacing: 0.16em;
+	}
+
+	.hero-tile__sub {
+		opacity: 0.55;
+		font-size: 0.65rem;
+	}
+
+	/* ---- standard grid (archive + 3+ available) ---- */
+	.grid {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		max-width: var(--max-w);
+		margin-inline: auto;
+		display: grid;
+		grid-template-columns: repeat(6, 1fr);
+		gap: var(--space-3);
+		grid-auto-flow: dense;
+	}
+
+	.tile {
+		grid-column: span 2;
+	}
+
+	.tile--tall {
+		grid-row: span 2;
+	}
+
+	.tile--wide {
+		grid-column: span 3;
+	}
+
+	.tile__link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+		height: 100%;
+	}
+
+	.tile__figure {
+		position: relative;
+		margin: 0;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		background: var(--chrome-1);
+		flex: 1;
+	}
+
+	.tile--tall .tile__figure {
+		aspect-ratio: 4 / 7;
+	}
+
+	.tile--wide .tile__figure {
+		aspect-ratio: 21 / 12;
+	}
+
+	.tile__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 28%;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.tile:hover .tile__img {
+		transform: scale(1.05);
+	}
+
+	.tile__status {
+		position: absolute;
+		top: 0.7rem;
+		left: 0.7rem;
+		font-size: 0.55rem;
+		padding: 0.25rem 0.55rem;
+		background: rgba(244, 241, 236, 0.92);
+		color: var(--ink);
+		letter-spacing: 0.18em;
+		border: 1px solid rgba(10, 9, 8, 0.1);
+	}
+
+	.tile__status.is-available {
+		background: var(--acid);
+		color: var(--ink);
+	}
+
+	.tile__status.is-featured {
+		background: var(--bone);
+		color: var(--ink);
+		border: 1px solid var(--acid);
+	}
+
+	.tile__status.is-archive {
+		background: rgba(10, 9, 8, 0.85);
+		color: var(--bone);
+	}
+
+	.tile__caption {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		font-size: 0.7rem;
+		letter-spacing: 0.08em;
+	}
+
+	.tile__idx {
+		opacity: 0.5;
+		font-size: 0.6rem;
+	}
+
+	.tile__name {
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		letter-spacing: 0.16em;
+	}
+
+	.tile__sub {
+		opacity: 0.55;
+		font-size: 0.6rem;
+	}
+
+	@media (max-width: 1100px) {
+		.grid {
+			grid-template-columns: repeat(4, 1fr);
+		}
+	}
+
+	@media (max-width: 720px) {
+		.grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+		.tile {
+			grid-column: span 1;
+		}
+		.tile--wide,
+		.tile--tall {
+			grid-column: span 2;
+			grid-row: auto;
+		}
+		.stats {
+			gap: var(--space-3);
+		}
+		.available-grid--hero-pair {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.empty {
+			padding: var(--space-5) var(--space-3);
+		}
+	}
+</style>
