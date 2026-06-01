@@ -64,6 +64,28 @@ function getEnv(locals: App.Locals, key: string): string | undefined {
 	return proc?.[key];
 }
 
+// Reads a secret that may be either a plain Worker secret/var (a string) or a
+// Cloudflare Secrets Store binding (an object whose value you fetch via .get()).
+async function getSecret(
+	locals: App.Locals,
+	key: string
+): Promise<string | undefined> {
+	const v = (locals as any)?.runtime?.env?.[key];
+	if (typeof v === "string") return v;
+	if (v && typeof v.get === "function") {
+		try {
+			const resolved = await v.get();
+			return typeof resolved === "string" ? resolved : undefined;
+		} catch {
+			return undefined;
+		}
+	}
+	const proc = (globalThis as any).process?.env as
+		| Record<string, string>
+		| undefined;
+	return proc?.[key];
+}
+
 function arrayBufferToBase64(buf: ArrayBuffer): string {
 	const bytes = new Uint8Array(buf);
 	let binary = "";
@@ -141,7 +163,7 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 		)
 	);
 
-	const apiKey = getEnv(locals, "RESEND_API_KEY");
+	const apiKey = await getSecret(locals, "RESEND_API_KEY");
 	const toAddress = getEnv(locals, "INQUIRY_TO_EMAIL") || "orders@badjuju.net";
 	const fromAddress =
 		getEnv(locals, "INQUIRY_FROM_EMAIL") || "bad juju <orders@badjuju.net>";

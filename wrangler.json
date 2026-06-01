@@ -10,6 +10,13 @@
 	"kv_namespaces": [
 		{ "binding": "KV", "id": "57d0516e45a440fb98cbc94dfb57f906" }
 	],
+	"secrets_store_secrets": [
+		{
+			"binding": "RESEND_API_KEY",
+			"store_id": "9bca7eb657ac4bb58ed329ffc53f708d",
+			"secret_name": "RESEND_API_KEY"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
