@@ -37,7 +37,6 @@ Create a markdown file in `src/content/pieces/` following the existing schema in
 
 ```md
 ---
-name: "OBJECT 008 — MOON HORN"
 index: 8
 earStyle: bunny       # demon | bunny | fox | cat | custom
 materials:
@@ -51,7 +50,7 @@ dateCompleted: 2026-05-20
 Long-form body copy goes here.
 ```
 
-Drop the photo into `public/images/`. The slug is the filename (`008-moon-horn.md` → `/portfolio/008-moon-horn`).
+Pieces have no name — the display label (`OBJECT 008`) is derived from `index` via `objectLabel()` in [src/consts.ts](src/consts.ts). Drop the photo into `public/images/`. Name the file with the zero-padded number only; the slug is the filename (`008.md` → `/products/008`).
 
 Mark `status: featured` or `status: available` to surface a piece in the home page slider.
 

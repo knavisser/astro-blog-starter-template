@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import Cardinal from "../components/sigils/Cardinal.astro";
 import ToastStack from "../components/ToastStack.astro";
-import { SHOP_URL } from "../consts";
+import { SHOP_URL, objectLabel } from "../consts";
 
 const pieces = await getCollection("pieces");
 
@@ -91,7 +91,7 @@ const stats = {
 								<img
 									class="tile__img"
 									src={piece.data.heroImage}
-									alt={piece.data.name}
+									alt={objectLabel(piece.data.index)}
 									loading={i < 3 ? "eager" : "lazy"}
 								/>
 								<span
@@ -108,7 +108,7 @@ const stats = {
 								<span class="tile__idx">
 									/// {String(piece.data.index).padStart(3, "0")}
 								</span>
-								<span class="tile__name">{piece.data.name}</span>
+								<span class="tile__name">{objectLabel(piece.data.index)}</span>
 								<span class="tile__sub">
 									{piece.data.earStyle.toUpperCase()} · DIY STITCH
 								</span>
@@ -145,7 +145,7 @@ const stats = {
 								<img
 									class="tile__img"
 									src={piece.data.heroImage}
-									alt={piece.data.name}
+									alt={objectLabel(piece.data.index)}
 									loading={i < 3 ? "eager" : "lazy"}
 								/>
 								<span
@@ -162,7 +162,7 @@ const stats = {
 								<span class="tile__idx">
 									/// {String(piece.data.index).padStart(3, "0")}
 								</span>
-								<span class="tile__name">{piece.data.name}</span>
+								<span class="tile__name">{objectLabel(piece.data.index)}</span>
 								<span class="tile__sub">
 									{piece.data.earStyle.toUpperCase()} · DIY STITCH
 								</span>

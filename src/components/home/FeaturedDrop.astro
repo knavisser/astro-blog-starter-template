@@ -1,6 +1,7 @@
 ---
 import { getCollection } from "astro:content";
 import Icon from "../Icon.astro";
+import { objectLabel } from "../../consts";
 
 const pieces = (await getCollection("pieces")).sort(
 	(a, b) => a.data.index - b.data.index
@@ -42,7 +43,7 @@ const loop = [...pieces, ...pieces];
 									<img
 										class="card__img"
 										src={piece.data.heroImage}
-										alt={piece.data.name}
+										alt={objectLabel(piece.data.index)}
 										loading={idx < 3 ? "eager" : "lazy"}
 										draggable="false"
 									/>
@@ -51,7 +52,7 @@ const loop = [...pieces, ...pieces];
 									<span class="mono card__idx">
 										///{String(piece.data.index).padStart(2, "0")} / {String(total).padStart(2, "0")}
 									</span>
-									<h3 class="display card__name">{piece.data.name}</h3>
+									<h3 class="display card__name">{objectLabel(piece.data.index)}</h3>
 									<div class="card__meta mono">
 										<span>{piece.data.earStyle.toUpperCase()}</span>
 										<span class="dot">·</span>

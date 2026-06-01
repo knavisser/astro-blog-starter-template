@@ -18,6 +18,36 @@ function getKV(
 	return kv && typeof kv.get === "function" ? kv : null;
 }
 
+/** Same-named runtime/process env var — used as a local-dev (.dev.vars) fallback. */
+function getEnvVar(locals: App.Locals, key: string): string | null {
+	const v = (locals as any)?.runtime?.env?.[key];
+	if (typeof v === "string") return v;
+	const p = (globalThis as any).process?.env?.[key];
+	return typeof p === "string" ? p : null;
+}
+
+/**
+ * Read a flag: KV first (production source of truth), falling back to an env var
+ * of the same name so `.dev.vars` can drive the toasts during local `astro dev`,
+ * where KV is an empty local store. An empty-string KV value is a real value
+ * (e.g. Toast_Stock_Override="" means "auto") and is returned as-is.
+ */
+async function readFlag(
+	locals: App.Locals,
+	kv: ReturnType<typeof getKV>,
+	key: string
+): Promise<string | null> {
+	if (kv) {
+		try {
+			const v = await kv.get(key);
+			if (v !== null && v !== undefined) return v;
+		} catch {
+			/* fall through to env */
+		}
+	}
+	return getEnvVar(locals, key);
+}
+
 /** Product <loc> URLs from the SumUp products sitemap. */
 function extractProductUrls(xml: string): string[] {
 	return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)]
@@ -124,15 +154,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
 	// --- Stock: Toast_Stock_Override -----------------------------------------
 	//   ""/absent → auto-detect from the store · "0" → force hidden · "1" → show
-	let stockOverride: string | null = null;
-	if (kv) {
-		try {
-			stockOverride = await kv.get("Toast_Stock_Override");
-		} catch {
-			/* treat as auto */
-		}
-	}
-	const ov = (stockOverride ?? "").trim();
+	const ov = ((await readFlag(locals, kv, "Toast_Stock_Override")) ?? "").trim();
 	let stockAvailable: boolean;
 	if (ov === "1") stockAvailable = true;
 	else if (ov === "0") stockAvailable = false;
@@ -140,14 +162,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
 	// --- Customs: Toast_Customs_Open ------------------------------------------
 	//   dd/mm/yyyy cutoff; open while today (Amsterdam) is on or before it.
-	let customsRaw: string | null = null;
-	if (kv) {
-		try {
-			customsRaw = await kv.get("Toast_Customs_Open");
-		} catch {
-			/* treat as closed */
-		}
-	}
+	const customsRaw = await readFlag(locals, kv, "Toast_Customs_Open");
 	const cutoff = customsRaw ? parseCutoffDate(customsRaw) : null;
 	const customsOpen = cutoff !== null && amsterdamDateNumber() <= cutoff;
 

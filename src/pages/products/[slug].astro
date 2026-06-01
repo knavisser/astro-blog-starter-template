@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import type { GetStaticPaths } from "astro";
 import Icon from "../../components/Icon.astro";
-import { SHOP_URL } from "../../consts";
+import { SHOP_URL, objectLabel } from "../../consts";
 
 export const getStaticPaths: GetStaticPaths = async () => {
 	const pieces = await getCollection("pieces");
@@ -20,7 +20,11 @@ const completed = data.dateCompleted
 	: null;
 ---
 
-<Base title={data.name} description={data.summary} image={data.heroImage}>
+<Base
+	title={objectLabel(data.index)}
+	description={data.summary}
+	image={data.heroImage}
+>
 	<article class="piece">
 		<div class="piece__top">
 			<a class="back mono" href="/products" data-cursor="link">
@@ -31,8 +35,8 @@ const completed = data.dateCompleted
 
 		<section class="lead">
 			<div class="lead__inner">
-				<p class="mono kicker">/// OBJECT {String(data.index).padStart(3, "0")}</p>
-				<h1 class="display name">{data.name}</h1>
+				<p class="mono kicker">/// ONE OF ONE</p>
+				<h1 class="display name">{objectLabel(data.index)}</h1>
 				<p class="summary">{data.summary}</p>
 
 				<dl class="spec mono">
@@ -75,7 +79,11 @@ const completed = data.dateCompleted
 			</div>
 
 			<figure class="lead__figure">
-				<img src={data.heroImage} alt={data.name} fetchpriority="high" />
+				<img
+					src={data.heroImage}
+					alt={objectLabel(data.index)}
+					fetchpriority="high"
+				/>
 			</figure>
 		</section>
 	</article>

@@ -8,7 +8,7 @@
 		"binding": "ASSETS"
 	},
 	"kv_namespaces": [
-		{ "binding": "KV", "id": "REPLACE_WITH_badjuju_config_NAMESPACE_ID" }
+		{ "binding": "KV", "id": "57d0516e45a440fb98cbc94dfb57f906" }
 	],
 	"observability": {
 		"enabled": true

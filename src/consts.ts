@@ -10,3 +10,8 @@ export const INSTAGRAM_URL = "https://instagram.com/";
 // hoodies. Point this at the brand subdomain once SumUp's custom domain is
 // connected; until then it can hold the raw SumUp store URL.
 export const SHOP_URL = "https://shop.badjuju.net";
+
+// Pieces are identified by number only. Build the display label from a piece's
+// index, e.g. objectLabel(1) === "OBJECT 001".
+export const objectLabel = (index: number) =>
+	`OBJECT ${String(index).padStart(3, "0")}`;
