@@ -8,7 +8,7 @@ materials:
   - "yellow felt bat-wing appliqué"
 heroImage: "/images/hoodie5.jpg"
 summary: "bleached and stencilled body. single tall horn. cadmium yellow bat-wing felt sewn across the chest."
-status: available
+status: archive
 dateCompleted: 2026-02-28
 ---
 

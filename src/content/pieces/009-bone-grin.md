@@ -8,7 +8,7 @@ materials:
   - "thin stitched grin along the hood line"
 heroImage: "/images/hoodie9.jpg"
 summary: "bone-and-soot body. pointed ears with black tips. a thin grin stitched across the hood-line for the wearer alone."
-status: available
+status: archive
 dateCompleted: 2026-05-12
 ---
 

@@ -8,7 +8,7 @@ materials:
   - "single twisted horn"
 heroImage: "/images/hoodie7.jpg"
 summary: "graphite static-dye body. single twisted horn pulled forward. graphic art on the chest in unstable ink."
-status: available
+status: archive
 dateCompleted: 2026-04-29
 ---
 

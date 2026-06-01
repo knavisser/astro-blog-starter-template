@@ -6,6 +6,7 @@ import {
 	CONTACT_EMAIL,
 	INSTAGRAM_HANDLE,
 	INSTAGRAM_URL,
+	SHOP_URL,
 } from "../consts";
 import CrossCircle from "./sigils/CrossCircle.astro";
 
@@ -27,6 +28,11 @@ const year = new Date().getFullYear();
 				<li><a href="/" data-cursor="link">HOME</a></li>
 				<li><a href="/products" data-cursor="link">PRODUCTS</a></li>
 				<li><a href="/custom" data-cursor="link">CUSTOM</a></li>
+				<li>
+					<a href={SHOP_URL} target="_blank" rel="noopener noreferrer" data-cursor="link"
+						>SHOP</a
+					>
+				</li>
 			</ul>
 		</div>
 

@@ -7,6 +7,9 @@
 		"directory": "./dist",
 		"binding": "ASSETS"
 	},
+	"kv_namespaces": [
+		{ "binding": "KV", "id": "REPLACE_WITH_badjuju_config_NAMESPACE_ID" }
+	],
 	"observability": {
 		"enabled": true
 	},

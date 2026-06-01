@@ -1,0 +1,232 @@
+---
+// Background notification toasts. A single same-origin call to /api/site-flags
+// returns { stockAvailable, customsOpen }; each toast reveals itself when its
+// flag is true and it hasn't been dismissed this session.
+//   - stock:   in-stock detection on the SumUp store (auto + manual override)
+//   - customs: purely manual flag — shown only when customs are open
+import { SHOP_URL } from "../consts";
+
+const toasts = [
+	{
+		id: "toast-stock",
+		flag: "stockAvailable",
+		session: "shopToastDismissed",
+		kicker: "// LIVE NOW",
+		message: "Unique stock available",
+		cta: "Summon now",
+		href: SHOP_URL,
+		external: true,
+	},
+	{
+		id: "toast-customs",
+		flag: "customsOpen",
+		session: "customsToastDismissed",
+		kicker: "// CUSTOMS OPEN",
+		message: "Customs open for quotes",
+		cta: "Summon now",
+		href: "/custom#summon",
+		external: false,
+	},
+];
+---
+
+<div class="toast-stack" aria-live="polite">
+	{
+		toasts.map((t) => (
+			<aside
+				id={t.id}
+				class="toast"
+				role="status"
+				data-flag={t.flag}
+				data-session={t.session}
+				hidden
+			>
+				<button class="toast__close" type="button" aria-label="Dismiss">
+					×
+				</button>
+				<p class="toast__kicker mono">{t.kicker}</p>
+				<p class="toast__msg">{t.message}</p>
+				<a
+					class="toast__link mono"
+					href={t.href}
+					data-cursor="link"
+					{...(t.external
+						? { target: "_blank", rel: "noopener noreferrer" }
+						: {})}
+				>
+					<span>{t.cta}</span>
+					<span class="toast__arrow" aria-hidden="true">
+						→
+					</span>
+				</a>
+			</aside>
+		))
+	}
+</div>
+
+<script>
+	function initToasts() {
+		const stack = document.querySelector<HTMLElement>(".toast-stack");
+		if (!stack || stack.dataset.bound === "true") return;
+		stack.dataset.bound = "true";
+
+		const toasts = Array.from(
+			stack.querySelectorAll<HTMLElement>(".toast")
+		);
+
+		// Wire up dismissal regardless of fetch outcome.
+		for (const el of toasts) {
+			const key = el.dataset.session || "";
+			el.querySelector(".toast__close")?.addEventListener("click", () => {
+				el.classList.remove("is-visible");
+				try {
+					sessionStorage.setItem(key, "1");
+				} catch {}
+				window.setTimeout(() => (el.hidden = true), 400);
+			});
+		}
+
+		fetch("/api/site-flags", { headers: { accept: "application/json" } })
+			.then((r) => (r.ok ? r.json() : null))
+			.then((data) => {
+				if (!data) return;
+				toasts.forEach((el, i) => {
+					const flag = el.dataset.flag || "";
+					const key = el.dataset.session || "";
+					let dismissed = false;
+					try {
+						dismissed = sessionStorage.getItem(key) === "1";
+					} catch {}
+					if (dismissed || !data[flag]) return;
+					el.hidden = false;
+					// Stagger multiple toasts slightly as they pop in.
+					window.setTimeout(
+						() => el.classList.add("is-visible"),
+						120 + i * 140
+					);
+				});
+			})
+			.catch(() => {});
+	}
+
+	initToasts();
+	document.addEventListener("astro:after-swap", initToasts);
+</script>
+
+<style>
+	.toast-stack {
+		position: fixed;
+		right: var(--gutter);
+		bottom: var(--gutter);
+		z-index: 90;
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.65rem;
+		pointer-events: none;
+	}
+
+	.toast {
+		pointer-events: auto;
+		position: relative;
+		width: min(300px, calc(100vw - 2 * var(--gutter)));
+		padding: 1rem 1.1rem 1.1rem;
+		background: var(--ink);
+		color: var(--bone);
+		border: 1px solid var(--acid);
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		opacity: 0;
+		transform: translateY(14px) scale(0.96);
+	}
+
+	.toast.is-visible {
+		animation: toast-pop 0.5s cubic-bezier(0.18, 0.9, 0.25, 1.4) forwards;
+	}
+
+	@keyframes toast-pop {
+		0% {
+			opacity: 0;
+			transform: translateY(14px) scale(0.9);
+		}
+		60% {
+			opacity: 1;
+			transform: translateY(-3px) scale(1.03);
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	.toast__close {
+		position: absolute;
+		top: 0.35rem;
+		right: 0.5rem;
+		background: transparent;
+		border: 0;
+		color: var(--bone);
+		opacity: 0.55;
+		font-size: 1.1rem;
+		line-height: 1;
+		padding: 0.25rem;
+		cursor: pointer;
+		transition: opacity 0.2s ease;
+	}
+
+	.toast__close:hover {
+		opacity: 1;
+	}
+
+	.toast__kicker {
+		margin: 0;
+		font-size: 0.6rem;
+		letter-spacing: 0.24em;
+		color: var(--acid);
+	}
+
+	.toast__msg {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+		letter-spacing: 0.04em;
+	}
+
+	.toast__link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.3rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.22em;
+		color: var(--bone);
+		opacity: 0.85;
+		transition: opacity 0.2s ease, color 0.2s ease;
+	}
+
+	.toast__link:hover {
+		opacity: 1;
+		color: var(--acid);
+	}
+
+	.toast__arrow {
+		transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.toast__link:hover .toast__arrow {
+		transform: translateX(4px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.toast {
+			transform: none;
+		}
+		.toast.is-visible {
+			animation: none;
+			opacity: 1;
+		}
+		.toast__arrow {
+			transition: none;
+		}
+	}
+</style>

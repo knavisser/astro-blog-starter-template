@@ -8,7 +8,7 @@ materials:
   - "screen-printed tag graphic on the back panel"
 heroImage: "/images/hoodie11.jpg"
 summary: "rust body. heavy drop-back ears. a faded screen-print on the back like a name-tag worn through a season."
-status: available
+status: archive
 dateCompleted: 2026-05-22
 ---
 
