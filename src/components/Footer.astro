@@ -4,8 +4,6 @@ import {
 	ATELIER_COORDS,
 	ATELIER_LABEL,
 	CONTACT_EMAIL,
-	INSTAGRAM_HANDLE,
-	INSTAGRAM_URL,
 	SHOP_URL,
 } from "../consts";
 import CrossCircle from "./sigils/CrossCircle.astro";
@@ -41,11 +39,6 @@ const year = new Date().getFullYear();
 			<ul>
 				<li>
 					<a href={`mailto:${CONTACT_EMAIL}`} data-cursor="link">{CONTACT_EMAIL}</a>
-				</li>
-				<li>
-					<a href={INSTAGRAM_URL} target="_blank" rel="noopener" data-cursor="link"
-						>{INSTAGRAM_HANDLE}</a
-					>
 				</li>
 				<li>
 					<a href="/custom#summon" data-cursor="link">REQUEST A PIECE</a>

@@ -3,9 +3,11 @@ import Icon from "./Icon.astro";
 ---
 
 <form class="inquiry" id="inquiry" novalidate>
-	<!-- honeypot -->
+	<!-- honeypot — hidden; real users never see or fill this. Named obscurely so
+	     browser autofill won't populate it (autofill targets names like "company"). -->
 	<label class="hp" aria-hidden="true" tabindex="-1">
-		Don't fill this out: <input type="text" name="company" autocomplete="off" />
+		Leave this empty:
+		<input type="text" name="hpot" autocomplete="off" tabindex="-1" />
 	</label>
 
 	<fieldset class="field-group">

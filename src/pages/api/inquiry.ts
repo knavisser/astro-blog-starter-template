@@ -13,7 +13,6 @@ const InquirySchema = z.object({
 	modifications: z.string().trim().max(4000).optional().default(""),
 	budget: z.string().trim().max(40).optional().default(""),
 	notes: z.string().trim().max(4000).optional().default(""),
-	company: z.string().max(0).optional().default(""), // honeypot — must be empty
 });
 
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
@@ -111,20 +110,24 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 		);
 	}
 
+	// Honeypot — a hidden field real users never see. If a bot (or aggressive
+	// browser autofill) fills it, silently accept and drop. Checked on the raw
+	// payload BEFORE validation so it can never cause a false "invalid fields" 400.
+	if ((text.hpot ?? "").trim().length > 0) {
+		return Response.json({ ok: true }, { status: 200 });
+	}
+
 	const parsed = InquirySchema.safeParse(text);
 	if (!parsed.success) {
+		const fields = parsed.error.issues.map((i) => i.path.join("."));
+		console.warn("[INQUIRY] validation failed:", fields.join(", "));
 		return Response.json(
-			{ ok: false, error: "Missing or invalid fields." },
+			{ ok: false, error: "Missing or invalid fields.", fields },
 			{ status: 400 }
 		);
 	}
 
 	const data = parsed.data;
-
-	// honeypot
-	if (data.company && data.company.length > 0) {
-		return Response.json({ ok: true }, { status: 200 });
-	}
 
 	const ip = clientAddress || "unknown";
 	const attachmentNames = files.map((f) => f.name || "attachment");
@@ -139,9 +142,9 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 	);
 
 	const apiKey = getEnv(locals, "RESEND_API_KEY");
-	const toAddress = getEnv(locals, "INQUIRY_TO_EMAIL");
+	const toAddress = getEnv(locals, "INQUIRY_TO_EMAIL") || "orders@badjuju.net";
 	const fromAddress =
-		getEnv(locals, "INQUIRY_FROM_EMAIL") || "bad juju <inquiry@badjuju.dev>";
+		getEnv(locals, "INQUIRY_FROM_EMAIL") || "bad juju <orders@badjuju.net>";
 
 	if (apiKey && toAddress) {
 		const attachments = await Promise.all(
