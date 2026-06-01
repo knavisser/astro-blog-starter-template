@@ -7,18 +7,18 @@ import { SHOP_URL, objectLabel } from "../consts";
 
 const pieces = await getCollection("pieces");
 
-const featuredPieces = pieces
-	.filter((p) => p.data.status === "featured")
-	.sort((a, b) => a.data.index - b.data.index);
-
-const archivePieces = pieces
-	.filter((p) => p.data.status === "archive")
-	.sort((a, b) => a.data.index - b.data.index);
+// One grid: featured pieces always lead, everything else follows. Within each
+// group pieces are ordered by index. The status pill is the only divider.
+const orderedPieces = [...pieces].sort((a, b) => {
+	const aLead = a.data.status === "featured" ? 0 : 1;
+	const bLead = b.data.status === "featured" ? 0 : 1;
+	return aLead - bLead || a.data.index - b.data.index;
+});
 
 const stats = {
 	total: pieces.length,
-	featured: featuredPieces.length,
-	archive: archivePieces.length,
+	featured: pieces.filter((p) => p.data.status === "featured").length,
+	archive: pieces.filter((p) => p.data.status === "archive").length,
 };
 ---
 
@@ -66,73 +66,19 @@ const stats = {
 		</div>
 	</section>
 
-	<section class="section section--featured">
-		<header class="section__head">
-			<p class="mono section__kicker">// I. FEATURED</p>
-			<h2 class="display section__title">FEATURED · PIECES</h2>
-		</header>
-
+	<section class="section">
 		<ol class="grid">
 			{
-				featuredPieces.map((piece, i) => (
+				orderedPieces.map((piece, i) => (
 					<li
 						class:list={[
 							"tile",
-							{ "tile--tall": i % 3 === 1, "tile--wide": i % 5 === 4 },
-						]}
-					>
-						<a
-							class="tile__link"
-							href={`/products/${piece.id}`}
-							data-cursor="zoom"
-							data-cursor-label="VIEW"
-						>
-							<figure class="tile__figure">
-								<img
-									class="tile__img"
-									src={piece.data.heroImage}
-									alt={objectLabel(piece.data.index)}
-									loading={i < 3 ? "eager" : "lazy"}
-								/>
-								<span
-									class:list={[
-										"mono",
-										"tile__status",
-										`is-${piece.data.status}`,
-									]}
-								>
-									{piece.data.status.toUpperCase()}
-								</span>
-							</figure>
-							<div class="tile__caption mono">
-								<span class="tile__idx">
-									/// {String(piece.data.index).padStart(3, "0")}
-								</span>
-								<span class="tile__name">{objectLabel(piece.data.index)}</span>
-								<span class="tile__sub">
-									{piece.data.earStyle.toUpperCase()} · DIY STITCH
-								</span>
-							</div>
-						</a>
-					</li>
-				))
-			}
-		</ol>
-	</section>
-
-	<section class="section section--archive">
-		<header class="section__head">
-			<p class="mono section__kicker">// II. ARCHIVE</p>
-			<h2 class="display section__title">ARCHIVE · PIECES</h2>
-		</header>
-
-		<ol class="grid">
-			{
-				archivePieces.map((piece, i) => (
-					<li
-						class:list={[
-							"tile",
-							{ "tile--tall": i % 3 === 1, "tile--wide": i % 5 === 4 },
+							{
+								"tile--tall": i % 3 === 1,
+								// tall takes priority so no tile is ever both tall and
+								// wide (a 3×2 block can't backfill the grid and orphans)
+								"tile--wide": i % 5 === 4 && i % 3 !== 1,
+							},
 						]}
 					>
 						<a
@@ -290,39 +236,13 @@ const stats = {
 		margin-top: var(--space-3);
 	}
 
-	/* ---- sections ---- */
+	/* ---- collection grid ---- */
 	.section {
-		padding: var(--space-5) var(--gutter) var(--space-6);
+		padding: var(--space-5) var(--gutter) var(--space-8);
 		background: var(--bone);
 	}
 
-	.section--archive {
-		padding-bottom: var(--space-8);
-	}
-
-	.section__head {
-		max-width: var(--max-w);
-		margin: 0 auto var(--space-4);
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		border-top: 1px solid var(--rule);
-		padding-top: var(--space-4);
-	}
-
-	.section__kicker {
-		opacity: 0.5;
-		font-size: 0.7rem;
-		margin: 0;
-	}
-
-	.section__title {
-		margin: 0;
-		font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-		letter-spacing: 0.08em;
-	}
-
-	/* ---- standard grid (featured + archive) ---- */
+	/* ---- standard grid (all pieces, featured first) ---- */
 	.grid {
 		list-style: none;
 		padding: 0;
