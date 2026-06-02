@@ -5,23 +5,30 @@ const steps = [
 	{
 		numeral: "I",
 		label: "BASE",
-		image: "/images/hoodie6.jpg",
+		image: "/images/WIP1.jpg",
 		body:
-			"We source the hoodie together, or you bring your own. Then we talk the design through — every wish mapped and the direction locked before a single cut is made.",
+			"We source the hoodie together, or you bring your own. We talk the design through, then dye and prep the base — every wish mapped before a single cut is made.",
 	},
 	{
 		numeral: "II",
 		label: "CRAFT",
-		image: "/images/hoodie5.jpg",
+		image: "/images/WIP2.jpg",
 		body:
-			"Want the ears cut from the hoodie itself? We crop it for the extra fabric. Prefer it whole? The ears come from a fabric of your choosing — then lined, and set by hand with studs and spikes.",
+			"The ears are cut by hand. Crop the hoodie for its own fabric, or build them from a fabric of your choosing — panels shaped and appliquéd piece by piece.",
 	},
 	{
 		numeral: "III",
-		label: "SUMMONED",
-		image: "/images/hoodie3.jpg",
+		label: "ASSEMBLE",
+		image: "/images/WIP3.jpg",
 		body:
-			"Any last features are stitched in. The piece is packaged with care and sent out into the world — one of one, ready to be worn.",
+			"Ears are lined, then sewn onto the hood and set by hand with studs and spikes. Pinned and fitted on the form until the silhouette holds.",
+	},
+	{
+		numeral: "IV",
+		label: "SUMMONED",
+		image: "/images/WIP4.jpg",
+		body:
+			"Any last features are stitched in. The finished piece is packaged with care and sent out into the world — one of one, ready to be worn.",
 	},
 ];
 ---
@@ -104,8 +111,8 @@ const steps = [
 		padding: 0;
 		margin: 0;
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: var(--space-5);
+		grid-template-columns: repeat(4, 1fr);
+		gap: var(--space-4);
 		max-width: var(--max-w);
 		margin-inline: auto;
 	}
@@ -128,7 +135,7 @@ const steps = [
 		height: 100%;
 		object-fit: cover;
 		object-position: center 28%;
-		filter: grayscale(0.3) contrast(1.04);
+		filter: grayscale(0.3);
 	}
 
 	.step__head {
@@ -157,7 +164,16 @@ const steps = [
 		max-width: 36ch;
 	}
 
-	@media (max-width: 800px) {
+	/* tablet: 2×2 grid */
+	@media (max-width: 1100px) {
+		.process__grid {
+			grid-template-columns: repeat(2, 1fr);
+			gap: var(--space-5);
+		}
+	}
+
+	/* mobile: single column */
+	@media (max-width: 600px) {
 		.process__grid {
 			grid-template-columns: 1fr;
 			gap: var(--space-6);

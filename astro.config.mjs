@@ -14,4 +14,12 @@ export default defineConfig({
 			enabled: true,
 		},
 	}),
+	vite: {
+		// Pre-bundle lenis on dev startup so it isn't lazily re-optimized
+		// mid-session — that lazy re-optimization is what causes the
+		// "Outdated Optimize Dep" 504 for lenis.js. Dev-only; build is unaffected.
+		optimizeDeps: {
+			include: ["lenis"],
+		},
+	},
 });
