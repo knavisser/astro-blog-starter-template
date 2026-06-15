@@ -90,12 +90,12 @@ const loop = [...pieces, ...pieces];
 		if (!section || !wrap || !shift || !rail) return;
 
 		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		const AUTO_VELOCITY = reduced ? 0 : 36; // px / s — idle drift speed
-		const DRAG_RATIO_MOUSE = 0.5; // desktop: rail moves half the mouse delta — feels controlled
-		const DRAG_RATIO_TOUCH = 1.0; // mobile: rail follows the finger 1:1 — native-feeling swipe
-		const INERTIA_DECAY = 0.95; // per frame at 60 fps — lower = snappier stop
-		const VELOCITY_CLAMP = 2800; // px / s — momentum cap on a fast flick
-		const DRAG_THRESHOLD = 6; // px — movement before a tap becomes a drag
+		const AUTO_VELOCITY = reduced ? 0 : 36; // px / s, idle drift speed
+		const DRAG_RATIO_MOUSE = 0.5; // desktop: rail moves half the mouse delta, feels controlled
+		const DRAG_RATIO_TOUCH = 1.0; // mobile: rail follows the finger 1:1, native-feeling swipe
+		const INERTIA_DECAY = 0.95; // per frame at 60 fps, lower = snappier stop
+		const VELOCITY_CLAMP = 2800; // px / s, momentum cap on a fast flick
+		const DRAG_THRESHOLD = 6; // px, movement before a tap becomes a drag
 
 		// measure the width of one "cycle" (first half of the doubled content)
 		let cycleWidth = 0;
@@ -132,7 +132,7 @@ const loop = [...pieces, ...pieces];
 
 			if (!expanded) {
 				if (isDragging) {
-					// pos is set by pointer handler — nothing to add here
+					// pos is set by pointer handler, nothing to add here
 				} else {
 					// idle: auto-scroll + decaying drag inertia
 					pos -= AUTO_VELOCITY * dt;
@@ -392,7 +392,7 @@ const loop = [...pieces, ...pieces];
 		will-change: transform;
 	}
 
-	/* inner rail — JS-driven transform */
+	/* inner rail, JS-driven transform */
 	.drop__rail {
 		--card-w: clamp(280px, 28vw, 360px);
 		--card-gap: 1.5rem;

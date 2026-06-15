@@ -18,7 +18,7 @@ function getKV(
 	return kv && typeof kv.get === "function" ? kv : null;
 }
 
-/** Same-named runtime/process env var — used as a local-dev (.dev.vars) fallback. */
+/** Same-named runtime/process env var, used as a local-dev (.dev.vars) fallback. */
 function getEnvVar(locals: App.Locals, key: string): string | null {
 	const v = (locals as any)?.runtime?.env?.[key];
 	if (typeof v === "string") return v;
@@ -58,7 +58,7 @@ function extractProductUrls(xml: string): string[] {
 /**
  * A SumUp product is purchasable when its "Add to cart" button is rendered and
  * not carrying a real boolean `disabled` attribute. We must NOT match on page
- * text like "Sold out" — that lives in an i18n dictionary on every page — nor
+ * text like "Sold out", that lives in an i18n dictionary on every page, nor
  * on Tailwind `disabled:` utility classes, hence the negative lookahead.
  */
 function isProductAvailable(html: string): boolean {

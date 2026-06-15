@@ -1,0 +1,429 @@
+---
+import Base from "../layouts/Base.astro";
+import BarcodeBlock from "../components/sigils/BarcodeBlock.astro";
+import Icon from "../components/Icon.astro";
+import { ATELIER_LABEL, ATELIER_COORDS } from "../consts";
+---
+
+<Base
+	title="about"
+	description="Bad Juju is an independent fashion label based in Rotterdam, building one of one garments through upcycling, reconstruction, and handmade modification."
+>
+	<section class="intro">
+		<div class="intro__inner">
+			<p class="mono kicker" data-reveal>// V. ABOUT</p>
+			<h1 class="display intro__title" data-reveal>
+				<span class="row">A SECOND</span>
+				<span class="row row--right"><em>life</em></span>
+				<span class="row">FOR CLOTH.</span>
+			</h1>
+			<p class="intro__lede" data-reveal>
+				Bad Juju is an independent fashion label based in Rotterdam, building
+				one of one garments through upcycling, reconstruction, and handmade
+				modification.
+			</p>
+			<p class="mono intro__sys" data-reveal>{ATELIER_LABEL} · {ATELIER_COORDS}</p>
+		</div>
+	</section>
+
+	<section class="story">
+		<div class="story__grid">
+			<div class="story__col">
+				<p class="mono colhead" data-reveal>// THE WORK</p>
+				<p class="story__p" data-reveal>
+					Every piece starts with an existing garment and is given a second
+					life through alteration, deconstruction, and rebuilding. The goal
+					isn't simply to customise clothing, but to create something reborn,
+					turning the familiar into something strange, expressive, and
+					entirely new.
+				</p>
+				<p class="story__p" data-reveal>
+					Drawing inspiration from grunge, punk, alternative fashion,
+					underground subcultures, and creature aesthetics, Bad Juju exists
+					somewhere between streetwear and self-expression. The garments are
+					designed for people who feel most at home standing slightly outside
+					the norm.
+				</p>
+			</div>
+
+			<aside class="story__aside" data-reveal>
+				<BarcodeBlock size={160} seed="BJ-ABOUT-2026" class="bar" />
+				<p class="mono code">REF // BJ-ROTTERDAM-2026</p>
+			</aside>
+		</div>
+	</section>
+
+	<section class="maker">
+		<div class="maker__inner">
+			<span class="maker__logo" aria-hidden="true"></span>
+			<p class="mono kicker" data-reveal>// THE MAKER</p>
+			<p class="maker__p" data-reveal>
+				Each piece is designed, modified, and assembled by hand in a small
+				Rotterdam atelier by <span class="name">Cyan</span>, a Spanish artist
+				and maker who oversees every stage of the process from concept to
+				production.
+			</p>
+		</div>
+	</section>
+
+	<section class="creed">
+		<div class="creed__inner">
+			<p class="display creed__line" data-reveal>NO MASS PRODUCTION.</p>
+			<p class="display creed__line creed__line--dim" data-reveal>NO FACTORIES.</p>
+			<p class="creed__note" data-reveal>
+				Just garments with a previous life and a new story to tell.
+			</p>
+		</div>
+	</section>
+
+	<section class="cta-band">
+		<div class="cta-band__inner" data-reveal>
+			<h2 class="display cta-band__title">WHAT'S <em>your</em> STORY?</h2>
+			<a class="cta" href="/custom" data-cursor="link">
+				<span>START A CONVERSATION</span>
+				<Icon name="arrow-up-right" size={20} />
+			</a>
+		</div>
+	</section>
+</Base>
+
+<style>
+	/* ---- intro ---------------------------------------------------------- */
+	.intro {
+		background: var(--ink);
+		color: var(--bone);
+		padding: calc(var(--header-h) + var(--space-7)) var(--gutter) var(--space-7);
+		position: relative;
+		overflow: hidden;
+	}
+
+	.intro::after {
+		content: "";
+		position: absolute;
+		top: -25%;
+		left: -25%;
+		width: 150%;
+		height: 150%;
+		pointer-events: none;
+		/* marble image, nudged toward our acid green and darkened a touch */
+		background:
+			linear-gradient(rgba(198, 255, 0, 0.1), rgba(198, 255, 0, 0.1)),
+			url("/png/map_bg.jpg") center / cover no-repeat;
+		filter: brightness(0.8) saturate(1.25);
+		animation: about-drift 80s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+
+	@keyframes about-drift {
+		from { transform: translate3d(8%, -6%, 0); }
+		to { transform: translate3d(-8%, 6%, 0); }
+	}
+
+	.intro__inner {
+		position: relative;
+		z-index: 1;
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
+		align-items: flex-start;
+	}
+
+	/* readability scrim weighted to the left, where the heading and lede sit */
+	.intro__inner::before {
+		content: "";
+		position: absolute;
+		/* span the full viewport; opaque over the left-aligned text, fading to
+		   zero before the right edge and at top/bottom (the left side sits at the
+		   screen edge, so there is nothing to seam against there) */
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 100vw;
+		height: 150%;
+		z-index: -1;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse 58% 62% at 20% 50%,
+			rgba(10, 9, 8, 0.64) 0%,
+			rgba(10, 9, 8, 0.5) 42%,
+			rgba(10, 9, 8, 0.26) 70%,
+			transparent 100%
+		);
+	}
+
+	.kicker {
+		opacity: 0.6;
+		font-size: 0.7rem;
+		margin: 0;
+	}
+
+	.intro__title {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.05em;
+		line-height: 0.92;
+		font-size: clamp(2.6rem, 9vw, 8rem);
+		letter-spacing: 0.04em;
+	}
+
+	.row--right {
+		align-self: flex-start;
+		padding-left: 1.4em;
+	}
+
+	.intro__title em,
+	.cta-band__title em {
+		font-family: var(--font-body);
+		font-style: italic;
+		font-weight: 300;
+		font-size: 0.5em;
+		opacity: 0.65;
+		text-transform: lowercase;
+		padding: 0 0.2em;
+		vertical-align: 0.2em;
+	}
+
+	.intro__lede {
+		font-size: clamp(1.05rem, 2vw, 1.4rem);
+		line-height: 1.6;
+		max-width: 46ch;
+		opacity: 0.82;
+		margin: var(--space-2) 0 0;
+	}
+
+	.intro__sys {
+		opacity: 0.5;
+		font-size: 0.65rem;
+		margin: var(--space-2) 0 0;
+	}
+
+	/* ---- story ---------------------------------------------------------- */
+	.story {
+		background: var(--bone);
+		color: var(--ink);
+		padding: var(--space-7) var(--gutter);
+	}
+
+	.story__grid {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 3fr 1fr;
+		gap: var(--space-5);
+		align-items: start;
+	}
+
+	.colhead {
+		opacity: 0.45;
+		font-size: 0.7rem;
+		margin: 0 0 var(--space-3);
+	}
+
+	.story__p {
+		font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+		line-height: 1.6;
+		margin: 0 0 var(--space-4);
+		max-width: 34ch;
+		letter-spacing: 0.005em;
+	}
+
+	.story__p:last-child {
+		margin-bottom: 0;
+		opacity: 0.78;
+	}
+
+	.story__aside {
+		position: sticky;
+		top: calc(var(--header-h) + var(--space-3));
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+		align-items: flex-start;
+	}
+
+	:global(.story__aside .bar) {
+		color: var(--ink);
+		opacity: 0.7;
+		width: 100%;
+		max-width: 180px;
+	}
+
+	.code {
+		font-size: 0.55rem;
+		opacity: 0.5;
+		margin: 0;
+	}
+
+	/* ---- maker ---------------------------------------------------------- */
+	.maker {
+		background: var(--bone-2);
+		color: var(--ink);
+		padding: var(--space-7) var(--gutter);
+		border-top: 1px solid var(--rule);
+	}
+
+	.maker__inner {
+		max-width: 70ch;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-3);
+	}
+
+	.maker__logo {
+		display: block;
+		width: 72px;
+		height: 72px;
+		background-color: var(--ink);
+		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+	}
+
+	.maker__p {
+		font-size: clamp(1.2rem, 2.6vw, 2rem);
+		line-height: 1.5;
+		margin: 0;
+	}
+
+	.maker__p .name {
+		font-family: var(--font-display);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-size: 0.85em;
+		color: var(--acid-dim);
+	}
+
+	/* ---- creed ---------------------------------------------------------- */
+	.creed {
+		background: var(--ink);
+		color: var(--bone);
+		padding: var(--space-8) var(--gutter);
+	}
+
+	.creed__inner {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: 0.05em;
+	}
+
+	.creed__line {
+		margin: 0;
+		font-size: clamp(2rem, 8vw, 7rem);
+		letter-spacing: 0.04em;
+		line-height: 0.95;
+	}
+
+	.creed__line--dim {
+		color: var(--chrome-3);
+		padding-left: 1.5em;
+	}
+
+	.creed__note {
+		font-family: var(--font-body);
+		text-transform: none;
+		font-size: clamp(1rem, 2vw, 1.4rem);
+		opacity: 0.7;
+		margin: var(--space-4) 0 0;
+		max-width: 48ch;
+		line-height: 1.6;
+	}
+
+	/* ---- cta band ------------------------------------------------------- */
+	.cta-band {
+		background: var(--bone);
+		color: var(--ink);
+		padding: var(--space-8) var(--gutter);
+	}
+
+	.cta-band__inner {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-4);
+	}
+
+	.cta-band__title {
+		margin: 0;
+		font-size: clamp(2rem, 7vw, 6rem);
+		letter-spacing: 0.05em;
+	}
+
+	.cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 1.2rem 2.2rem;
+		font-family: var(--font-display);
+		font-size: 0.85rem;
+		letter-spacing: 0.3em;
+		background: var(--ink);
+		color: var(--bone);
+		position: relative;
+		overflow: hidden;
+		transition: color 0.4s ease;
+	}
+
+	.cta::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--acid);
+		transform: translateY(101%);
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+		z-index: 0;
+	}
+
+	.cta > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.cta:hover {
+		color: var(--ink);
+	}
+
+	.cta:hover::before {
+		transform: translateY(0);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.intro::after {
+			animation: none;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.story__grid {
+			grid-template-columns: 1fr;
+			gap: var(--space-4);
+		}
+		.story__aside {
+			position: static;
+			flex-direction: row;
+			align-items: center;
+			gap: var(--space-3);
+		}
+		.story__p {
+			max-width: none;
+		}
+		.creed__line--dim {
+			padding-left: 0.6em;
+		}
+	}
+
+	@media (max-width: 720px) {
+		.row--right {
+			padding-left: 0.6em;
+		}
+	}
+</style>

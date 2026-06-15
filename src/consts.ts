@@ -4,7 +4,7 @@ export const SITE_DESCRIPTION =
 export const ATELIER_COORDS = "LAT 51.9125°N · LON 4.4351°E";
 export const ATELIER_LABEL = "SYS//ATELIER 2026";
 export const CONTACT_EMAIL = "info@badjuju.net";
-// SumUp Online Store — the shop is the single source of truth for sellable
+// SumUp Online Store, the shop is the single source of truth for sellable
 // hoodies. Point this at the brand subdomain once SumUp's custom domain is
 // connected; until then it can hold the raw SumUp store URL.
 export const SHOP_URL = "https://shop.badjuju.net";

@@ -36,12 +36,12 @@ function renderHtml(
 		["Telegram", data.telegram],
 		["Country", data.country],
 		["Based on character", data.basedOnCharacter === "yes" ? "Yes" : "No"],
-		["Ear shape", data.earStyle || "—"],
-		["Size", data.size || "—"],
-		["Budget tier", data.budget || "—"],
-		["Modifications", data.modifications || "—"],
-		["Notes", data.notes || "—"],
-		["Attachments", attachmentNames.length ? attachmentNames.join(", ") : "—"],
+		["Ear shape", data.earStyle || "n/a"],
+		["Size", data.size || "n/a"],
+		["Budget tier", data.budget || "n/a"],
+		["Modifications", data.modifications || "n/a"],
+		["Notes", data.notes || "n/a"],
+		["Attachments", attachmentNames.length ? attachmentNames.join(", ") : "n/a"],
 	];
 	return `<!doctype html><html><body style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
 		<h2 style="font-family:'Michroma',sans-serif;letter-spacing:.18em;">NEW SUMMONS</h2>
@@ -132,7 +132,7 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 		);
 	}
 
-	// Honeypot — a hidden field real users never see. If a bot (or aggressive
+	// Honeypot, a hidden field real users never see. If a bot (or aggressive
 	// browser autofill) fills it, silently accept and drop. Checked on the raw
 	// payload BEFORE validation so it can never cause a false "invalid fields" 400.
 	if ((text.hpot ?? "").trim().length > 0) {
@@ -185,7 +185,7 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 				body: JSON.stringify({
 					from: fromAddress,
 					to: [toAddress],
-					subject: `// NEW SUMMONS — ${data.name}`,
+					subject: `// NEW SUMMONS: ${data.name}`,
 					html: renderHtml(data, attachmentNames),
 					attachments: attachments.length ? attachments : undefined,
 				}),

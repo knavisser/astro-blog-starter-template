@@ -5,6 +5,7 @@ const pathname = Astro.url.pathname;
 const navLinks = [
 	{ href: "/", label: "HOME" },
 	{ href: "/products", label: "PRODUCTS" },
+	{ href: "/about", label: "ABOUT" },
 	{ href: "/custom", label: "CUSTOM" },
 ];
 const isActive = (href: string) =>
@@ -18,8 +19,8 @@ const initialState = pinned ? "scrolled" : "top";
 
 <header id="site-header" data-state={initialState} data-pinned={pinned ? "true" : "false"} data-nav-open="false">
 	<div class="header__inner">
-		<a class="brand" href="/" data-cursor="link">
-			<span class="brand__mark mono">▽</span>
+		<a class="brand" href="/" data-cursor="link" aria-label={SITE_TITLE}>
+			<span class="brand__mark" aria-hidden="true"></span>
 			<span class="brand__wordmark display">{SITE_TITLE}</span>
 		</a>
 
@@ -148,7 +149,19 @@ const initialState = pinned ? "scrolled" : "top";
 	}
 
 	.brand__mark {
-		font-size: 0.85rem;
+		display: block;
+		width: 30px;
+		height: 30px;
+		flex: 0 0 auto;
+		/* recolour the silhouette logo to follow the header text colour, so it
+		   reads bone over the dark hero and ink once the bar turns solid. */
+		background-color: currentColor;
+		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		transition: opacity 0.3s ease;
+	}
+
+	.brand:hover .brand__mark {
 		opacity: 0.7;
 	}
 

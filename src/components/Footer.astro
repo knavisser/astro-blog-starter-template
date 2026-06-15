@@ -6,7 +6,6 @@ import {
 	CONTACT_EMAIL,
 	SHOP_URL,
 } from "../consts";
-import CrossCircle from "./sigils/CrossCircle.astro";
 
 const year = new Date().getFullYear();
 ---
@@ -14,7 +13,7 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
 	<div class="grid">
 		<div class="col col--brand">
-			<CrossCircle size={56} class="sigil" />
+			<span class="brand-logo" aria-hidden="true"></span>
 			<p class="display brand">{SITE_TITLE}</p>
 			<p class="mono atelier">{ATELIER_LABEL}</p>
 			<p class="mono coords">{ATELIER_COORDS}</p>
@@ -25,6 +24,7 @@ const year = new Date().getFullYear();
 			<ul>
 				<li><a href="/" data-cursor="link">HOME</a></li>
 				<li><a href="/products" data-cursor="link">PRODUCTS</a></li>
+				<li><a href="/about" data-cursor="link">ABOUT</a></li>
 				<li><a href="/custom" data-cursor="link">CUSTOM</a></li>
 				<li>
 					<a href={SHOP_URL} target="_blank" rel="noopener noreferrer" data-cursor="link"
@@ -84,9 +84,14 @@ const year = new Date().getFullYear();
 		align-items: flex-start;
 	}
 
-	:global(.col--brand .sigil) {
-		color: var(--acid);
+	.brand-logo {
+		display: block;
+		width: 64px;
+		height: 64px;
 		margin-bottom: var(--space-2);
+		background-color: var(--acid);
+		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
 	}
 
 	.brand {

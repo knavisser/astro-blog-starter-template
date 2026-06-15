@@ -3,7 +3,7 @@
 // returns { stockAvailable, customsOpen }; each toast reveals itself when its
 // flag is true and it hasn't been dismissed this session.
 //   - stock:   in-stock detection on the SumUp store (auto + manual override)
-//   - customs: purely manual flag — shown only when customs are open
+//   - customs: purely manual flag, shown only when customs are open
 import { SHOP_URL } from "../consts";
 
 const toasts = [
@@ -123,6 +123,13 @@ const toasts = [
 		flex-direction: column-reverse;
 		gap: 0.65rem;
 		pointer-events: none;
+	}
+
+	/* Collapse dismissed/inactive toasts out of the flex column so the queue
+	   flows from the bottom up. Without this, `.toast { display: flex }`
+	   overrides the `hidden` attribute and each toast reserves its own slot. */
+	.toast[hidden] {
+		display: none;
 	}
 
 	.toast {

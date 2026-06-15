@@ -120,7 +120,7 @@ img {
 	color: var(--acid);
 }
 
-/* hide scrollbars across browsers — content still scrolls */
+/* hide scrollbars across browsers, content still scrolls */
 html {
 	scrollbar-width: none;
 	-ms-overflow-style: none;
@@ -181,7 +181,7 @@ body::-webkit-scrollbar,
 	white-space: nowrap;
 }
 
-/* reveal primitive — used by IntersectionObserver in Base layout */
+/* reveal primitive, used by IntersectionObserver in Base layout */
 [data-reveal] {
 	opacity: 0;
 	transform: translate3d(0, 1.5rem, 0);

@@ -1,11 +1,10 @@
 ---
-import CrossCircle from "../sigils/CrossCircle.astro";
 import Icon from "../Icon.astro";
 ---
 
 <section class="summon" id="summon-cta">
 	<div class="summon__inner" data-reveal>
-		<CrossCircle size={64} class="summon__sigil" animated />
+		<span class="summon__logo" aria-hidden="true"></span>
 		<p class="mono kicker">// IV. SUMMON</p>
 
 		<h2 class="display">
@@ -58,10 +57,11 @@ import Icon from "../Icon.astro";
 		width: 150%;
 		height: 150%;
 		pointer-events: none;
-		background-color: var(--acid);
-		-webkit-mask: url("/png/map_bg.png") center / cover no-repeat;
-		mask: url("/png/map_bg.png") center / cover no-repeat;
-		opacity: 0.3;
+		/* marble image, nudged toward our acid green and darkened a touch */
+		background:
+			linear-gradient(rgba(198, 255, 0, 0.1), rgba(198, 255, 0, 0.1)),
+			url("/png/map_bg.jpg") center / cover no-repeat;
+		filter: brightness(0.8) saturate(1.25);
 		animation: summon-drift 90s ease-in-out infinite alternate;
 		will-change: transform;
 	}
@@ -93,8 +93,36 @@ import Icon from "../Icon.astro";
 		gap: var(--space-3);
 	}
 
-	:global(.summon__sigil) {
-		color: var(--acid);
+	/* readability scrim: a soft pool of ink behind the centred text so it stays
+	   legible over the lighter veins of the marble */
+	.summon__inner::before {
+		content: "";
+		position: absolute;
+		/* span the full viewport so the fade reaches zero at the screen edges,
+		   never inside the visible area (which would read as a seam) */
+		left: 50%;
+		top: 50%;
+		transform: translate(-50%, -50%);
+		width: 100vw;
+		height: 135%;
+		z-index: -1;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse 50% 58% at 50% 50%,
+			rgba(10, 9, 8, 0.6) 0%,
+			rgba(10, 9, 8, 0.5) 42%,
+			rgba(10, 9, 8, 0.28) 70%,
+			transparent 100%
+		);
+	}
+
+	.summon__logo {
+		display: block;
+		width: 72px;
+		height: 72px;
+		background-color: var(--ink);
+		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
 	}
 
 	.kicker {

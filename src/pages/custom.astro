@@ -71,24 +71,29 @@ import {
 	.contact__left::before {
 		content: "";
 		position: absolute;
-		inset: 0;
+		/* Oversize the layer past the column on every edge so the drift can
+		   pan without exposing a gap, and so it always covers the full panel
+		   height down to the bottom of the section. */
+		top: -20%;
+		left: -20%;
+		width: 140%;
+		height: 140%;
 		pointer-events: none;
-		background-color: var(--acid);
-		-webkit-mask: url("/png/map_bg.png") center / cover no-repeat;
-		mask: url("/png/map_bg.png") center / cover no-repeat;
-		opacity: 0.35;
+		/* marble image, nudged toward our acid green and darkened a touch */
+		background:
+			linear-gradient(rgba(198, 255, 0, 0.1), rgba(198, 255, 0, 0.1)),
+			url("/png/map_bg.jpg") center / cover no-repeat;
+		filter: brightness(0.8) saturate(1.25);
 		animation: contact-drift 25s ease-in-out infinite alternate;
-		will-change: mask-position;
+		will-change: transform;
 	}
 
 	@keyframes contact-drift {
 		from {
-			-webkit-mask-position: 0% 0%;
-			mask-position: 0% 0%;
+			transform: translate3d(-8%, -8%, 0);
 		}
 		to {
-			-webkit-mask-position: 100% 100%;
-			mask-position: 100% 100%;
+			transform: translate3d(8%, 8%, 0);
 		}
 	}
 
@@ -105,6 +110,25 @@ import {
 		flex-direction: column;
 		gap: var(--space-2);
 		max-width: 480px;
+		/* lift the copy above the readability scrim painted on .contact__left */
+		z-index: 1;
+	}
+
+	/* readability scrim covering the whole left panel, fading to zero before its
+	   edges so no boundary is visible over the marble. It sits above the marble
+	   (::before) and below the copy (.left__sticky is z-index:1). */
+	.contact__left::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: radial-gradient(
+			ellipse 85% 60% at 32% 36%,
+			rgba(10, 9, 8, 0.72) 0%,
+			rgba(10, 9, 8, 0.5) 40%,
+			rgba(10, 9, 8, 0.26) 70%,
+			transparent 100%
+		);
 	}
 
 	:global(.contact__left .sigil) {

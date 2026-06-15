@@ -3,7 +3,7 @@ import Icon from "./Icon.astro";
 ---
 
 <form class="inquiry" id="inquiry" novalidate>
-	<!-- honeypot — hidden; real users never see or fill this. Named obscurely so
+	<!-- honeypot, hidden; real users never see or fill this. Named obscurely so
 	     browser autofill won't populate it (autofill targets names like "company"). -->
 	<label class="hp" aria-hidden="true" tabindex="-1">
 		Leave this empty:
@@ -83,10 +83,7 @@ import Icon from "./Icon.astro";
 					<option value="Draconid">Draconid</option>
 					<option value="Feline">Feline</option>
 					<option value="Hyenid">Hyenid</option>
-					<option value="Jolteon">Jolteon</option>
-					<option value="Marsupial">Marsupial</option>
-					<option value="From scratch">From scratch (new pattern)</option>
-					<option value="Other">Other — describe in notes</option>
+					<option value="Other">Other (describe in notes)</option>
 				</select>
 			</label>
 			<label class="field">
@@ -132,7 +129,7 @@ import Icon from "./Icon.astro";
 			<label class="budget">
 				<input type="radio" name="budget" value="150-200" data-cursor="link" />
 				<span
-					><strong>€150 – €200</strong><em
+					><strong>€150 to €200</strong><em
 						>custom horn/ear, cropping, hardware</em
 					></span
 				>
@@ -141,7 +138,7 @@ import Icon from "./Icon.astro";
 				<input type="radio" name="budget" value="200-plus" data-cursor="link" />
 				<span
 					><strong>€200+</strong><em
-						>full custom build — choose your brand</em
+						>full custom build, choose your brand</em
 					></span
 				>
 			</label>
@@ -158,7 +155,7 @@ import Icon from "./Icon.astro";
 			<textarea
 				name="notes"
 				rows="3"
-				placeholder="sizing quirks, references — we modify existing silhouettes, not from scratch"
+				placeholder="sizing quirks, references. we modify existing silhouettes, not from scratch"
 				data-cursor="link"></textarea>
 		</label>
 	</fieldset>
@@ -200,7 +197,7 @@ import Icon from "./Icon.astro";
 			if (totalBytes > MAX_TOTAL_BYTES) {
 				result.setAttribute("data-state", "error");
 				result.textContent =
-					"// FILES TOO LARGE — KEEP ATTACHMENTS UNDER 25MB TOTAL.";
+					"// FILES TOO LARGE. KEEP ATTACHMENTS UNDER 25MB TOTAL.";
 				return;
 			}
 
@@ -218,7 +215,7 @@ import Icon from "./Icon.astro";
 				form.reset();
 			} catch (err) {
 				result.setAttribute("data-state", "error");
-				result.textContent = `// FAILED — ${err instanceof Error ? err.message : "try again."}`;
+				result.textContent = `// FAILED. ${err instanceof Error ? err.message : "try again."}`;
 			}
 		});
 	}
@@ -295,6 +292,26 @@ import Icon from "./Icon.astro";
 	textarea {
 		resize: vertical;
 		min-height: 4rem;
+		/* re-enable scrolling for long replies: the global stylesheet hides every
+		   scrollbar, so opt the textareas back in here. */
+		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: var(--rule-strong) transparent;
+	}
+
+	textarea::-webkit-scrollbar {
+		display: block;
+		width: 6px;
+		height: 6px;
+	}
+
+	textarea::-webkit-scrollbar-thumb {
+		background: var(--rule-strong);
+		border-radius: 3px;
+	}
+
+	textarea::-webkit-scrollbar-track {
+		background: transparent;
 	}
 
 	input::placeholder,
@@ -330,12 +347,24 @@ import Icon from "./Icon.astro";
 		letter-spacing: 0.04em;
 	}
 
+	/* Animate the reveal instead of toggling display, so the form (and the
+	   marble background that resizes with the column) grows smoothly rather than
+	   snapping. margin-bottom is negative while collapsed to cancel the flex gap
+	   the still-present item would otherwise add. */
 	.character-upload {
-		display: none;
+		overflow: hidden;
+		max-height: 0;
+		opacity: 0;
+		margin-bottom: calc(-1 * var(--space-2));
+		transition:
+			max-height 0.45s cubic-bezier(0.2, 0.7, 0.1, 1),
+			opacity 0.3s ease,
+			margin-bottom 0.45s cubic-bezier(0.2, 0.7, 0.1, 1);
 	}
 
 	.field-group:has(.character-toggle:checked) .character-upload {
-		display: flex;
+		max-height: 10rem;
+		opacity: 1;
 		margin-bottom: 1.25rem;
 	}
 
