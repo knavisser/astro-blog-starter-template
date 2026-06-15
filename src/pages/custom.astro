@@ -1,7 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
 import InquiryForm from "../components/InquiryForm.astro";
-import CrossCircle from "../components/sigils/CrossCircle.astro";
 import BarcodeBlock from "../components/sigils/BarcodeBlock.astro";
 import {
 	CONTACT_EMAIL,
@@ -14,7 +13,7 @@ import {
 	<section class="contact" id="summon">
 		<div class="contact__left">
 			<div class="left__sticky">
-				<CrossCircle size={72} class="sigil" animated />
+				<span class="contact__logo" aria-hidden="true"></span>
 				<p class="mono kicker" data-reveal>// VI. SUMMONS</p>
 				<h1 class="display title" data-reveal>
 					<span class="row">SUMMON</span>
@@ -131,9 +130,14 @@ import {
 		);
 	}
 
-	:global(.contact__left .sigil) {
-		color: var(--acid);
+	.contact__logo {
+		display: block;
+		width: 72px;
+		height: 72px;
 		margin-bottom: var(--space-2);
+		background-color: var(--acid);
+		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
 	}
 
 	.kicker {

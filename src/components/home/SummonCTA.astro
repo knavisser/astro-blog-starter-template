@@ -3,30 +3,36 @@ import Icon from "../Icon.astro";
 ---
 
 <section class="summon" id="summon-cta">
-	<div class="summon__inner" data-reveal>
+	<div class="summon__bg" aria-hidden="true"></div>
+	<div class="summon__scrim" aria-hidden="true"></div>
+
+	<div class="summon__inner">
 		<span class="summon__logo" aria-hidden="true"></span>
-		<p class="mono kicker">// IV. SUMMON</p>
 
-		<h2 class="display">
-			<span class="row">SUMMON</span>
-			<span class="row row--right"><em>your</em></span>
-			<span class="row">OWN.</span>
-		</h2>
+		<div class="summon__body" data-reveal>
+			<p class="mono kicker">// IV. SUMMON</p>
 
-		<p class="lede">
-			Every piece starts with a conversation. Tell us the style you wish to
-			portray, the colours of your soul, and the animal you want to be. We'll
-			take it from there.
-		</p>
+			<h2 class="display">
+				<span class="row">SUMMON</span>
+				<span class="row row--right"><em>your</em></span>
+				<span class="row">OWN.</span>
+			</h2>
 
-		<a class="cta" href="/custom" data-cursor="link">
-			<span>REQUEST A PIECE</span>
-			<Icon name="arrow-up-right" size={20} />
-		</a>
+			<p class="lede">
+				Every piece starts with a conversation. Tell us the style you wish to
+				portray, the colours of your soul, and the animal you want to be. We'll
+				take it from there.
+			</p>
 
-		<p class="mono fineprint">
-			MTO LEAD TIME 3-6 WEEKS · LIMITED CYCLES · BUILT IN THE LOWLANDS
-		</p>
+			<a class="cta" href="/custom" data-cursor="link">
+				<span>REQUEST A PIECE</span>
+				<Icon name="arrow-up-right" size={20} />
+			</a>
+
+			<p class="mono fineprint">
+				MTO LEAD TIME 3-6 WEEKS · LIMITED CYCLES · BUILT IN THE LOWLANDS
+			</p>
+		</div>
 	</div>
 </section>
 
@@ -39,25 +45,16 @@ import Icon from "../Icon.astro";
 		overflow: hidden;
 	}
 
-	.summon::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		background:
-			radial-gradient(60% 50% at 20% 30%, rgba(198, 255, 0, 0.04) 0%, transparent 60%),
-			radial-gradient(50% 40% at 80% 70%, rgba(217, 213, 205, 0.06) 0%, transparent 60%);
-		pointer-events: none;
-	}
-
-	.summon::after {
-		content: "";
+	/* moving marble, nudged toward our acid green and darkened a touch. Kept as a
+	   dedicated layer (not ::after) so it paints behind the content and the logo
+	   can blend with it. */
+	.summon__bg {
 		position: absolute;
 		top: -25%;
 		left: -25%;
 		width: 150%;
 		height: 150%;
 		pointer-events: none;
-		/* marble image, nudged toward our acid green and darkened a touch */
 		background:
 			linear-gradient(rgba(198, 255, 0, 0.1), rgba(198, 255, 0, 0.1)),
 			url("/png/map_bg.jpg") center / cover no-repeat;
@@ -75,37 +72,11 @@ import Icon from "../Icon.astro";
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.summon::after {
-			animation: none;
-		}
-	}
-
-	.summon__inner {
-		position: relative;
-		z-index: 1;
-		max-width: 1100px;
-		margin: 0 auto;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		gap: var(--space-3);
-	}
-
-	/* readability scrim: a soft pool of ink behind the centred text so it stays
-	   legible over the lighter veins of the marble */
-	.summon__inner::before {
-		content: "";
+	/* readability scrim: a soft pool of ink behind the centred text, fading to
+	   zero at the section edges so no boundary is visible over the marble */
+	.summon__scrim {
 		position: absolute;
-		/* span the full viewport so the fade reaches zero at the screen edges,
-		   never inside the visible area (which would read as a seam) */
-		left: 50%;
-		top: 50%;
-		transform: translate(-50%, -50%);
-		width: 100vw;
-		height: 135%;
-		z-index: -1;
+		inset: 0;
 		pointer-events: none;
 		background: radial-gradient(
 			ellipse 50% 58% at 50% 50%,
@@ -116,13 +87,39 @@ import Icon from "../Icon.astro";
 		);
 	}
 
+	/* No z-index here: keeping .summon__inner out of its own stacking context
+	   lets the logo's blend mode reach the marble layer behind it. It still
+	   paints above the bg/scrim because it comes later in the DOM. */
+	.summon__inner {
+		position: relative;
+		max-width: 1100px;
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-3);
+	}
+
+	/* the logo inverts whatever moves beneath it: backdrop-filter samples the
+	   marble actually rendered behind the element, and the mask clips that
+	   inverted backdrop to the logo silhouette */
 	.summon__logo {
 		display: block;
-		width: 72px;
-		height: 72px;
-		background-color: var(--ink);
+		width: 84px;
+		height: 84px;
+		-webkit-backdrop-filter: invert(1);
+		backdrop-filter: invert(1);
 		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
 		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+	}
+
+	.summon__body {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		gap: var(--space-3);
 	}
 
 	.kicker {
@@ -163,7 +160,7 @@ import Icon from "../Icon.astro";
 		font-size: 1rem;
 		line-height: 1.6;
 		max-width: 56ch;
-		margin: 0;
+		margin: var(--space-3) auto 0;
 		opacity: 0.78;
 	}
 
@@ -212,6 +209,12 @@ import Icon from "../Icon.astro";
 		font-size: 0.62rem;
 		margin: 0;
 		margin-top: var(--space-3);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.summon__bg {
+			animation: none;
+		}
 	}
 
 	@media (max-width: 720px) {

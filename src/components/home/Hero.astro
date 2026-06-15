@@ -1,6 +1,5 @@
 ---
 import { SITE_TITLE, ATELIER_LABEL, ATELIER_COORDS } from "../../consts";
-import CrossCircle from "../sigils/CrossCircle.astro";
 
 interface Props {
 	image?: string;
@@ -24,7 +23,6 @@ const {
 
 	<div class="hero__bottom">
 		<div class="hero__bottom-left">
-			<CrossCircle size={48} class="hero__sigil" />
 			<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
 			<p class="mono hero__sub">stitched to be summoned · one of one</p>
 		</div>
@@ -183,11 +181,6 @@ const {
 		flex-direction: column;
 		gap: 0.7rem;
 		max-width: 80%;
-	}
-
-	:global(.hero__sigil) {
-		color: var(--acid);
-		margin-bottom: 0.5rem;
 	}
 
 	.hero__wordmark {
