@@ -1,20 +1,22 @@
 ---
 import Base from "../layouts/Base.astro";
+import Intro from "../components/Intro.astro";
 import Hero from "../components/home/Hero.astro";
-import Manifesto from "../components/home/Manifesto.astro";
 import FeaturedDrop from "../components/home/FeaturedDrop.astro";
-import Process from "../components/home/Process.astro";
+import Manifesto from "../components/home/Manifesto.astro";
 import SummonCTA from "../components/home/SummonCTA.astro";
+import Process from "../components/home/Process.astro";
 import Lookbook from "../components/home/Lookbook.astro";
 import ToastStack from "../components/ToastStack.astro";
 ---
 
 <Base>
+	<Intro />
 	<Hero />
-	<Manifesto />
 	<FeaturedDrop />
-	<Process />
+	<Manifesto />
 	<SummonCTA />
+	<Process />
 	<Lookbook />
 	<ToastStack />
 </Base>

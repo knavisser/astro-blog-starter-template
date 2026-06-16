@@ -26,7 +26,7 @@ npm run dev    # http://localhost:4321
 
 ## Routes
 
-- `/` — single-scroll marketing page (hero, manifesto, featured drop slider, process, lookbook, summon CTA)
+- `/` — single-scroll marketing page (hero, featured drop slider, manifesto, summon CTA, process, lookbook)
 - `/portfolio` — full archive grid
 - `/portfolio/[slug]` — individual piece detail page
 - `/contact` — inquiry form + atelier info

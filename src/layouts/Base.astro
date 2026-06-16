@@ -44,6 +44,7 @@ const { title, description, image, hideHeader, hideFooter } = Astro.props;
 				if (lenis) {
 					lenis.destroy?.();
 					lenis = null;
+					(window as any).__lenis = null;
 				}
 				if (!shouldRunMotion()) return;
 				lenis = new Lenis({
@@ -53,6 +54,8 @@ const { title, description, image, hideHeader, hideFooter } = Astro.props;
 					wheelMultiplier: 1,
 					touchMultiplier: 1.4,
 				});
+				// expose for the first-visit intro overlay (src/components/Intro.astro)
+				(window as any).__lenis = lenis;
 				function raf(time: number) {
 					lenis?.raf(time);
 					requestAnimationFrame(raf);

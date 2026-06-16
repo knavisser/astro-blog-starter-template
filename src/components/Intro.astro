@@ -1,0 +1,1019 @@
+---
+/*
+ * First-visit cinematic intro overlay (homepage only).
+ *
+ * Sequence: grain field -> the Bad Juju logo draws itself on (large, centred)
+ * over a WebGL marble field, with a short brand tagline + looping hoodie
+ * marquees -> the hero photo rises from the bottom as the drawn logo FLIES
+ * (FLIP transform) to its resting position next to the hero wordmark -> overlay
+ * fades, handing off. The hold screen waits for a click/scroll to proceed.
+ *
+ * Whether it plays is decided synchronously, before first paint, by the inline
+ * gate in src/components/BaseHead.astro (adds `html.intro-active`).
+ *
+ * Plays once per device (the bj_intro_seen localStorage flag). See REPLAY_DEBUG
+ * in the script below and the matching note in BaseHead.astro to replay it on
+ * every load while tuning.
+ */
+import BadJujuLogo from "./BadJujuLogo.astro";
+import { objectLabel } from "../consts";
+
+// hoodie marquees — hidden for now (flip to true to bring them back)
+const SHOW_HOODIES = false;
+const leftNums = [1, 4, 6, 9, 11];
+const rightNums = [3, 5, 8, 10, 12];
+// two identical sets per column so translateY(-50%) loops seamlessly
+const leftItems = [...leftNums, ...leftNums];
+const rightItems = [...rightNums, ...rightNums];
+---
+
+<div class="intro" data-intro aria-hidden="true">
+	<div class="intro__grain" aria-hidden="true"></div>
+	<canvas class="intro__map" aria-hidden="true"></canvas>
+
+	{SHOW_HOODIES && (
+	<div class="intro__columns" aria-hidden="true">
+		<div class="intro__col intro__col--left">
+			<div class="intro__track">
+				{
+					leftItems.map((n, i) => (
+						<figure class="intro__item" style={`--gd:${(i % 5) * 0.7}s`}>
+							<div class="intro__shot">
+								<img src={`/images/hoodie${n}.jpg`} alt="" />
+								<svg
+									class="intro__frame"
+									viewBox="0 0 100 133"
+									preserveAspectRatio="none"
+									aria-hidden="true"
+								>
+									<rect
+										class="intro__frame-rect"
+										x="2"
+										y="2"
+										width="96"
+										height="129"
+										pathLength="1"
+									/>
+								</svg>
+							</div>
+							<figcaption class="intro__obj mono" data-text={objectLabel(n)}>
+								{objectLabel(n)}
+							</figcaption>
+						</figure>
+					))
+				}
+			</div>
+		</div>
+		<div class="intro__col intro__col--right">
+			<div class="intro__track">
+				{
+					rightItems.map((n, i) => (
+						<figure class="intro__item" style={`--gd:${(i % 5) * 0.55}s`}>
+							<div class="intro__shot">
+								<img src={`/images/hoodie${n}.jpg`} alt="" />
+								<svg
+									class="intro__frame"
+									viewBox="0 0 100 133"
+									preserveAspectRatio="none"
+									aria-hidden="true"
+								>
+									<rect
+										class="intro__frame-rect"
+										x="2"
+										y="2"
+										width="96"
+										height="129"
+										pathLength="1"
+									/>
+								</svg>
+							</div>
+							<figcaption class="intro__obj mono" data-text={objectLabel(n)}>
+								{objectLabel(n)}
+							</figcaption>
+						</figure>
+					))
+				}
+			</div>
+		</div>
+	</div>
+	)}
+
+	<div class="intro__scrim" aria-hidden="true"></div>
+	<div class="intro__hero" aria-hidden="true">
+		<img class="intro__hero-img" src="/images/hoodie2.jpg" alt="" />
+		<div class="intro__hero-veil"></div>
+	</div>
+
+	<div class="intro__scene">
+		<div class="intro__logo">
+			<BadJujuLogo mode="draw" />
+		</div>
+
+		<div class="intro__tag">
+			<p class="mono intro__tag-kicker">// BAD JUJU</p>
+			<p class="intro__tag-line">
+				One&#8209;of&#8209;one hoodies, summoned to order, built by hand in the
+				lowlands.
+			</p>
+		</div>
+	</div>
+
+	<button class="intro__skip mono" type="button" aria-label="Enter site">
+		Enter <span aria-hidden="true">↓</span>
+	</button>
+</div>
+
+<style>
+	.intro {
+		--ease: cubic-bezier(0.2, 0.7, 0.1, 1);
+		position: fixed;
+		inset: 0;
+		z-index: 9999;
+		display: none;
+		overflow: hidden;
+		background: var(--ink);
+		color: var(--bone);
+		opacity: 1;
+		transition: opacity 0.45s ease;
+	}
+
+	:global(html.intro-active) .intro {
+		display: block;
+	}
+
+	/* ---- background layers ---- */
+
+	.intro__hero {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		pointer-events: none;
+		transform: translateY(100%);
+		transition: transform 1.5s var(--ease);
+		will-change: transform;
+	}
+
+	/* the photo mirrors .hero__img exactly (including the mobile object-position
+	   computed in JS), so the rising panel hands off to the real hero with no
+	   shift in framing */
+	.intro__hero-img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 8%;
+		filter: grayscale(0.05) saturate(0.95);
+	}
+
+	/* the hero veil (matches .hero__veil) */
+	.intro__hero-veil {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background:
+			linear-gradient(
+				to bottom,
+				rgba(10, 9, 8, 0.6) 0%,
+				rgba(10, 9, 8, 0) 28%,
+				rgba(10, 9, 8, 0) 62%,
+				rgba(10, 9, 8, 0.78) 100%
+			),
+			radial-gradient(
+				120% 80% at 50% 100%,
+				rgba(10, 9, 8, 0.35) 0%,
+				rgba(10, 9, 8, 0) 50%
+			);
+	}
+
+	@media (max-width: 720px) {
+		.intro__hero-img {
+			width: calc(100% + 36px);
+			height: 107%;
+			object-position: 50% 50%;
+		}
+	}
+
+	.intro.is-handoff .intro__hero {
+		transform: translateY(0);
+	}
+
+	/* film grain: inline feTurbulence noise, oversized so the boil never shows
+	   an edge. No asset file needed. */
+	.intro__grain {
+		position: absolute;
+		inset: -50%;
+		pointer-events: none;
+		opacity: 0;
+		mix-blend-mode: screen;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+		transition: opacity 0.6s ease;
+	}
+
+	.intro.is-stage-1 .intro__grain {
+		opacity: 0.3;
+		animation: intro-grain 1s steps(3) infinite;
+	}
+
+	/* WebGL marble field (src/scripts/introDistort.ts displaces it under the
+	   pointer). The CSS background is a fallback if WebGL is unavailable. */
+	.intro__map {
+		position: absolute;
+		/* oversized (200%) with 50% overscan so the diagonal drift + the rush have
+		   room to travel (clipped by .intro's overflow). `cover` keeps the marble's
+		   aspect ratio at every screen size — no squishing — and the source is huge
+		   (5184x3456) so it stays sharp. */
+		top: -50%;
+		left: -50%;
+		width: 200%;
+		height: 200%;
+		display: block;
+		pointer-events: none;
+		opacity: 0;
+		/* dim + acid tint via background layers (no filter, so it doesn't double
+		   up if the WebGL shader is re-enabled and draws over this) */
+		background-image:
+			linear-gradient(rgba(10, 9, 8, 0.18), rgba(10, 9, 8, 0.18)),
+			linear-gradient(rgba(198, 255, 0, 0.05), rgba(198, 255, 0, 0.05)),
+			url("/png/map_bg.jpg");
+		background-repeat: no-repeat;
+		background-size: cover;
+		background-position: center;
+		transition: opacity 1.4s var(--ease);
+		/* slow, smooth diagonal drift via transform (so it never squishes):
+		   top-left <-> bottom-right, ease-in-out eases into each turn (not snappy) */
+		animation: intro-map-drift 24s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+
+	@keyframes intro-map-drift {
+		from {
+			transform: translate(20%, 20%);
+		}
+		to {
+			transform: translate(-20%, -20%);
+		}
+	}
+
+	.intro.is-stage-2 .intro__map {
+		opacity: 0.8;
+	}
+
+	/* a soft ink pool behind the centred logo: darkens the backdrop so the
+	   difference-blended logo reads whiter/cleaner over the colourful map. */
+	.intro__scrim {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0;
+		background: radial-gradient(
+			ellipse 60% 50% at 50% 45%,
+			rgba(10, 9, 8, 0.8) 0%,
+			rgba(10, 9, 8, 0.45) 50%,
+			transparent 78%
+		);
+		transition: opacity 0.8s ease;
+	}
+
+	.intro.is-stage-2 .intro__scrim {
+		opacity: 1;
+	}
+
+	/* ---- hoodie marquees ----
+	   a column on each side: left drifts down, right drifts up, looping while
+	   the hold screen waits. Two identical sets per track so translateY(-50%)
+	   loops seamlessly. */
+	.intro__columns {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	/* each column is centred in the gap between its page edge and the logo */
+	.intro__col {
+		position: absolute;
+		top: 0;
+		height: 100%;
+		width: clamp(150px, 15vw, 260px);
+		overflow: hidden;
+		opacity: 0;
+		transition: opacity 1.2s ease;
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent,
+			#000 14%,
+			#000 86%,
+			transparent
+		);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent,
+			#000 14%,
+			#000 86%,
+			transparent
+		);
+	}
+
+	.intro__col--left {
+		left: 15%;
+		transform: translateX(-50%);
+	}
+
+	.intro__col--right {
+		left: 85%;
+		transform: translateX(-50%);
+	}
+
+	.intro.is-stage-1 .intro__col {
+		opacity: 1;
+	}
+
+	.intro__track {
+		display: flex;
+		flex-direction: column;
+		will-change: transform;
+	}
+
+	/* a marquee item = image + glitching object label; the wheel effect scales +
+	   fades + desaturates the whole item per-frame (see script) */
+	.intro__item {
+		width: 100%;
+		margin: 0 0 1rem;
+		pointer-events: auto;
+		will-change: transform, opacity;
+	}
+
+	.intro__shot {
+		position: relative;
+		display: block;
+	}
+
+	.intro__shot img {
+		width: 100%;
+		aspect-ratio: 3 / 4;
+		object-fit: cover;
+		display: block;
+	}
+
+	/* hover: an acid border draws itself around the image (like the logo's),
+	   with a soft acid glow */
+	.intro__frame {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		opacity: 0;
+		filter: drop-shadow(0 0 6px rgba(198, 255, 0, 0.55));
+		transition: opacity 0.2s ease;
+	}
+
+	.intro__frame-rect {
+		fill: none;
+		stroke: var(--acid);
+		stroke-width: 2;
+		vector-effect: non-scaling-stroke;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+	}
+
+	.intro__shot:hover .intro__frame {
+		opacity: 1;
+	}
+
+	.intro__shot:hover .intro__frame-rect {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 0.7s ease;
+	}
+
+	/* ---- glitching object label (RGB split + horizontal slice tearing) ---- */
+	.intro__obj {
+		position: relative;
+		display: block;
+		margin: 0.5rem 0 0;
+		font-size: 0.6rem;
+		letter-spacing: 0.2em;
+		text-align: center;
+		color: var(--bone);
+		white-space: nowrap;
+		animation: intro-glitch-base 0.8s steps(2, end) infinite;
+		animation-delay: var(--gd, 0s);
+	}
+
+	.intro__obj::before,
+	.intro__obj::after {
+		content: attr(data-text);
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 0;
+		overflow: hidden;
+		opacity: 0;
+	}
+
+	.intro__obj::before {
+		color: var(--acid);
+		animation: intro-glitch-a 0.8s steps(2, end) infinite;
+		animation-delay: var(--gd, 0s);
+	}
+
+	.intro__obj::after {
+		color: #ff2e88;
+		animation: intro-glitch-b 0.8s steps(2, end) infinite;
+		animation-delay: var(--gd, 0s);
+	}
+
+	@keyframes intro-glitch-base {
+		0%,
+		18%,
+		54%,
+		100% {
+			transform: translate(0, 0) skewX(0);
+		}
+		4% {
+			transform: translate(-1px, 0) skewX(8deg);
+		}
+		10% {
+			transform: translate(1px, 0) skewX(-6deg);
+		}
+		60% {
+			transform: translate(1px, 0) skewX(5deg);
+		}
+		66% {
+			transform: translate(-1px, 0) skewX(0);
+		}
+	}
+
+	@keyframes intro-glitch-a {
+		0%,
+		100% {
+			opacity: 0;
+			clip-path: inset(0 0 100% 0);
+			transform: translate(0, 0);
+		}
+		4% {
+			opacity: 1;
+			clip-path: inset(6% 0 80% 0);
+			transform: translate(-6px, -1px);
+		}
+		11% {
+			opacity: 1;
+			clip-path: inset(44% 0 38% 0);
+			transform: translate(5px, 0);
+		}
+		18% {
+			opacity: 1;
+			clip-path: inset(72% 0 12% 0);
+			transform: translate(-4px, 1px);
+		}
+		24% {
+			opacity: 0;
+		}
+		56% {
+			opacity: 0;
+			clip-path: inset(0 0 100% 0);
+		}
+		60% {
+			opacity: 1;
+			clip-path: inset(20% 0 62% 0);
+			transform: translate(6px, 0);
+		}
+		67% {
+			opacity: 1;
+			clip-path: inset(58% 0 22% 0);
+			transform: translate(-5px, 0);
+		}
+		72% {
+			opacity: 0;
+		}
+	}
+
+	@keyframes intro-glitch-b {
+		0%,
+		100% {
+			opacity: 0;
+			clip-path: inset(0 0 100% 0);
+			transform: translate(0, 0);
+		}
+		6% {
+			opacity: 0.95;
+			clip-path: inset(30% 0 54% 0);
+			transform: translate(6px, 1px);
+		}
+		13% {
+			opacity: 0.95;
+			clip-path: inset(64% 0 14% 0);
+			transform: translate(-6px, 0);
+		}
+		20% {
+			opacity: 0.95;
+			clip-path: inset(10% 0 76% 0);
+			transform: translate(5px, -1px);
+		}
+		26% {
+			opacity: 0;
+		}
+		58% {
+			opacity: 0;
+			clip-path: inset(0 0 100% 0);
+		}
+		63% {
+			opacity: 0.95;
+			clip-path: inset(40% 0 42% 0);
+			transform: translate(-6px, 0);
+		}
+		70% {
+			opacity: 0.95;
+			clip-path: inset(76% 0 8% 0);
+			transform: translate(5px, 1px);
+		}
+		74% {
+			opacity: 0;
+		}
+	}
+
+	.intro__col--left .intro__track {
+		animation: intro-marquee-down 30s linear infinite;
+	}
+
+	.intro__col--right .intro__track {
+		animation: intro-marquee-up 34s linear infinite;
+	}
+
+	@keyframes intro-marquee-down {
+		from {
+			transform: translateY(-50%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes intro-marquee-up {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(-50%);
+		}
+	}
+
+	/* ---- centred scene ---- */
+	.intro__scene {
+		position: relative;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-4);
+		padding: var(--gutter);
+	}
+
+	/* the logo wrapper is the FLIP element: it draws on, fills, then a JS
+	   transform flies it onto the hero's resting logo. */
+	.intro__logo {
+		width: clamp(220px, 42vw, 460px);
+		opacity: 0;
+		/* invert the backdrop the entire way through (matches the hero logo),
+		   with a soft white glow for contrast (mirrors the wordmark) */
+		color: #ffffff;
+		mix-blend-mode: difference;
+		/* tight bright rim for a sharp edge + one small soft glow (no big blur) */
+		filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95))
+			drop-shadow(0 0 2px rgba(255, 255, 255, 0.85))
+			drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+		transition: opacity 0.7s var(--ease);
+		will-change: transform;
+	}
+
+	.intro__logo :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.intro.is-stage-2 .intro__logo {
+		opacity: 1;
+	}
+
+	/* draw-on contract (currentColor, pathLength=1, non-scaling stroke) */
+	.intro__logo :global(.draw) {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		vector-effect: non-scaling-stroke;
+	}
+
+	.intro__logo :global(.fill) {
+		fill: currentColor;
+		fill-opacity: 0;
+	}
+
+	/* the outline draws over 3s (linear; starts at is-stage-2 + 0.5s ≈ 1s in).
+	   The fill begins 1.5s AFTER the outline starts (delay 2s = 0.5 + 1.5) so it
+	   fills DURING the draw rather than waiting for it — and slowly (0.9s), like
+	   before. To shift it, change the 2s fill-delay. */
+	.intro.is-stage-2 .intro__logo :global(.draw) {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 3s linear 0.5s;
+	}
+
+	.intro.is-stage-2 .intro__logo :global(.fill) {
+		fill-opacity: 1;
+		transition: fill-opacity 0.9s ease 2s;
+	}
+
+	/* snap the logo to its finished state if the visitor proceeds mid-draw */
+	.intro.is-complete .intro__logo {
+		opacity: 1;
+		transition: opacity 0.2s ease;
+	}
+	.intro.is-complete .intro__logo :global(.draw) {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 0.25s ease;
+	}
+	.intro.is-complete .intro__logo :global(.fill) {
+		fill-opacity: 1;
+		transition: fill-opacity 0.25s ease;
+	}
+
+	/* an acid outline redraws itself around the logo — on hover, and also when
+	   the visitor proceeds (so it spawns as the logo flies into place) */
+	.intro__logo:hover :global(.draw),
+	.intro.is-acid .intro__logo :global(.draw) {
+		stroke: var(--acid);
+		stroke-width: 7;
+		animation: intro-logo-redraw 1.8s ease forwards;
+	}
+
+	@keyframes intro-logo-redraw {
+		from {
+			stroke-dashoffset: 1;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	/* ---- brand tagline ---- */
+	.intro__tag {
+		max-width: 42ch;
+		text-align: center;
+		opacity: 0;
+		transform: translateY(12px);
+		transition:
+			opacity 0.8s var(--ease),
+			transform 0.8s var(--ease);
+	}
+
+	.intro__tag-kicker {
+		margin: 0 0 0.6rem;
+		font-size: 0.7rem;
+		color: var(--acid);
+		opacity: 0.85;
+	}
+
+	.intro__tag-line {
+		margin: 0;
+		font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+		line-height: 1.55;
+		color: var(--bone);
+		opacity: 0.86;
+	}
+
+	.intro.is-stage-2 .intro__tag {
+		opacity: 1;
+		transform: none;
+		transition-delay: 0.35s;
+	}
+
+	/* ---- handoff: fade the UI text + logo scrim; the rising hero photo hides
+	   grain/map, and the logo flies to the hero rather than fading ---- */
+	.intro.is-handoff .intro__tag,
+	.intro.is-handoff .intro__skip,
+	.intro.is-handoff .intro__scrim {
+		opacity: 0;
+		transition: opacity 0.4s ease;
+	}
+
+	/* reveal: fade the overlay to expose the hero, whose identical logo is
+	   sitting exactly where ours landed */
+	.intro.is-revealing {
+		opacity: 0;
+	}
+
+	.intro.is-skipping {
+		opacity: 0;
+	}
+
+	/* ---- skip affordance ---- */
+	.intro__skip {
+		position: absolute;
+		right: var(--gutter);
+		bottom: var(--gutter);
+		z-index: 1;
+		color: var(--bone);
+		opacity: 0;
+		font-size: 0.7rem;
+		letter-spacing: 0.24em;
+		padding: 0.6rem 0.4rem;
+		transition: opacity 0.5s ease 0.6s;
+	}
+
+	.intro.is-stage-1 .intro__skip {
+		opacity: 0.55;
+	}
+
+	.intro__skip:hover {
+		opacity: 1;
+		color: var(--acid);
+	}
+
+	@keyframes intro-grain {
+		0% {
+			transform: translate3d(0, 0, 0);
+		}
+		33% {
+			transform: translate3d(-3%, 2%, 0);
+		}
+		66% {
+			transform: translate3d(2%, -2%, 0);
+		}
+		100% {
+			transform: translate3d(-1%, 3%, 0);
+		}
+	}
+
+	/* Belt-and-suspenders: never show under reduced motion (the head gate
+	   already prevents `intro-active` in that case). */
+	@media (prefers-reduced-motion: reduce) {
+		:global(html.intro-active) .intro {
+			display: none;
+		}
+	}
+</style>
+
+<script>
+	import { initMapDistort } from "../scripts/introDistort";
+
+	// Once-per-device: when false, the intro marks itself seen (bj_intro_seen) the
+	// moment it begins, so it never replays. Set true (and comment the localStorage
+	// check in src/components/BaseHead.astro) to replay every load while tuning.
+	const REPLAY_DEBUG = false;
+
+	const root = document.documentElement;
+	const overlay = document.querySelector<HTMLElement>(".intro");
+
+	if (overlay && root.classList.contains("intro-active")) {
+		runIntro(overlay);
+	}
+
+	function runIntro(overlay: HTMLElement) {
+		let finished = false;
+		let proceeding = false;
+		let wheelRAF = 0;
+		let timeouts: number[] = [];
+
+		// We're driving the sequence now — cancel the head's no-JS failsafe.
+		const w = window as any;
+		if (w.__bjIntroFailsafe) {
+			clearTimeout(w.__bjIntroFailsafe);
+			w.__bjIntroFailsafe = null;
+		}
+
+		if (!REPLAY_DEBUG) {
+			// Mark seen immediately: once the intro begins it never replays.
+			try {
+				localStorage.setItem("bj_intro_seen", "1");
+			} catch (e) {
+				/* storage blocked */
+			}
+		}
+
+		// Lock scroll (Lenis runs its own RAF, so stop() it too).
+		root.classList.add("intro-lock");
+		window.scrollTo(0, 0);
+		withLenis((l) => l.stop?.());
+
+		startWheel();
+
+		const logo = overlay.querySelector<HTMLElement>(".intro__logo");
+		// WebGL marble distortion — disabled for now (revisit later). Flip to true
+		// to re-enable; the canvas falls back to a static CSS map_bg meanwhile.
+		const ENABLE_MAP_GL = false;
+		const mapCanvas = overlay.querySelector<HTMLCanvasElement>(".intro__map");
+		const distort =
+			ENABLE_MAP_GL && mapCanvas
+				? initMapDistort(mapCanvas, "/png/map_bg.jpg")
+				: null;
+
+		// mirror Hero.astro's responsive object-position on the rising hero panel
+		// so it lands exactly where the real hero img sits (no shift at handoff)
+		const heroImg = overlay.querySelector<HTMLImageElement>(".intro__hero-img");
+		function frameHeroImg() {
+			if (!heroImg) return;
+			if (!window.matchMedia("(max-width: 720px)").matches) {
+				heroImg.style.objectPosition = ""; // desktop: CSS center 8%
+				return;
+			}
+			const aspect = window.innerWidth / window.innerHeight;
+			const x = Math.max(50, Math.min(65, 50 + (aspect - 0.46) * 100));
+			heroImg.style.objectPosition = `${x.toFixed(1)}% 50%`;
+		}
+		frameHeroImg();
+
+		const stages: [number, string][] = [
+			[30, "is-stage-1"],
+			[500, "is-stage-2"],
+		];
+		for (const [at, cls] of stages) {
+			timeouts.push(window.setTimeout(() => overlay.classList.add(cls), at));
+		}
+		// No auto-advance: the hold screen (looping hoodie marquees) waits for
+		// the visitor to click / scroll / press a key, which calls proceed().
+
+		// ---- proceed (graceful handoff on any intent to interact) ----
+		const scrollKeys = new Set([
+			" ",
+			"Spacebar",
+			"PageDown",
+			"PageUp",
+			"ArrowDown",
+			"ArrowUp",
+			"Home",
+			"End",
+		]);
+
+		function onKey(e: KeyboardEvent) {
+			if (scrollKeys.has(e.key)) e.preventDefault();
+			proceed();
+		}
+		function onWheel(e: Event) {
+			e.preventDefault();
+			proceed();
+		}
+		function onTouch() {
+			proceed();
+		}
+		function onClick() {
+			proceed();
+		}
+		function onPointerMove(e: PointerEvent) {
+			// feed the WebGL marble distortion (background stays put; only the
+			// area along the pointer's path drags)
+			distort?.pointerMove(e.clientX, e.clientY);
+		}
+
+		window.addEventListener("keydown", onKey, { passive: false });
+		window.addEventListener("wheel", onWheel, { passive: false });
+		window.addEventListener("touchmove", onTouch, { passive: true });
+		window.addEventListener("pointermove", onPointerMove, { passive: true });
+		window.addEventListener("resize", frameHeroImg, { passive: true });
+		overlay.addEventListener("click", onClick);
+
+		// "wheel" effect: items scale up + fade in toward the vertical centre,
+		// smaller and fainter (and greyer) toward the top and bottom of the column.
+		function startWheel() {
+			const items = Array.from(
+				overlay.querySelectorAll<HTMLElement>(".intro__item")
+			);
+			if (!items.length) return;
+			const tick = () => {
+				const vh = window.innerHeight || 1;
+				const mid = vh / 2;
+				const centers = items.map((el) => {
+					const r = el.getBoundingClientRect();
+					return (r.top + r.bottom) / 2;
+				});
+				for (let i = 0; i < items.length; i++) {
+					const d = Math.min(1, Math.abs(centers[i] - mid) / (vh * 0.5));
+					items[i].style.transform = `scale(${(1 - 0.3 * d).toFixed(3)})`;
+					items[i].style.opacity = (1 - 0.8 * d).toFixed(3);
+					items[i].style.filter = `grayscale(${(0.55 * d).toFixed(2)}) brightness(${(1 - 0.4 * d).toFixed(2)})`;
+				}
+				wheelRAF = requestAnimationFrame(tick);
+			};
+			wheelRAF = requestAnimationFrame(tick);
+		}
+
+		function removeListeners() {
+			window.removeEventListener("keydown", onKey);
+			window.removeEventListener("wheel", onWheel as EventListener);
+			window.removeEventListener("touchmove", onTouch);
+			window.removeEventListener("pointermove", onPointerMove);
+			window.removeEventListener("resize", frameHeroImg);
+			overlay.removeEventListener("click", onClick);
+		}
+
+		// FLIP the drawn logo onto the hero's resting logo, then reveal.
+		function handoff() {
+			overlay.classList.add("is-handoff");
+			const heroLogo = document.querySelector<HTMLElement>(".hero__logo");
+			if (!logo || !heroLogo) {
+				reveal();
+				return;
+			}
+			const from = logo.getBoundingClientRect();
+			const to = heroLogo.getBoundingClientRect();
+			if (!from.width || !to.width) {
+				reveal();
+				return;
+			}
+			const scale = to.width / from.width;
+			const dx = to.left - from.left;
+			const dy = to.top - from.top;
+
+			logo.style.transformOrigin = "top left";
+			logo.style.transition = "transform 1.5s cubic-bezier(0.2,0.7,0.1,1)";
+			requestAnimationFrame(() => {
+				logo.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+			});
+
+			let moved = false;
+			function onMoved(e: TransitionEvent) {
+				if (e.propertyName !== "transform" || moved) return;
+				moved = true;
+				logo!.removeEventListener("transitionend", onMoved);
+				reveal();
+			}
+			logo.addEventListener("transitionend", onMoved);
+			// fallback in case transitionend doesn't fire
+			timeouts.push(
+				window.setTimeout(() => {
+					if (!moved) {
+						moved = true;
+						reveal();
+					}
+				}, 1800)
+			);
+		}
+
+		function reveal() {
+			overlay.classList.add("is-revealing");
+			timeouts.push(window.setTimeout(finish, 600));
+		}
+
+		// On proceed, rush the marble to whichever corner is FARTHER from where it
+		// is now (showing top-left -> rush to bottom-right, and vice versa), via
+		// transform so it's aspect-clean. Freeze first so it doesn't jump.
+		function rushMap() {
+			const map = overlay.querySelector<HTMLElement>(".intro__map");
+			if (!map) return;
+			const cs = getComputedStyle(map).transform;
+			const m = cs && cs !== "none" ? new DOMMatrixReadOnly(cs) : null;
+			const curX = m ? m.m41 : 0; // current translateX (px); sign = which corner
+			// translate > 0 shows the top-left -> rush to the bottom-right corner
+			const target = curX > 0 ? "translate(-20%, -20%)" : "translate(20%, 20%)";
+			map.style.animation = "none";
+			map.style.transform = m ? cs : "translate(0, 0)";
+			void map.offsetWidth; // commit the frozen transform before transitioning
+			map.style.transition = "transform 1.4s cubic-bezier(0.1, 0.8, 0.2, 1)";
+			map.style.transform = target;
+		}
+
+		function proceed() {
+			if (finished || proceeding) return;
+			proceeding = true;
+			// snap the logo complete + spawn the acid border + rush the marble to
+			// its far corner; a 0.1s beat later, slide the hero in + fly the logo.
+			for (const t of timeouts) clearTimeout(t);
+			overlay.classList.add("is-complete");
+			overlay.classList.add("is-acid");
+			rushMap();
+			timeouts = [window.setTimeout(handoff, 100)];
+		}
+
+		function finish() {
+			if (finished) return;
+			finished = true;
+			for (const t of timeouts) clearTimeout(t);
+			cancelAnimationFrame(wheelRAF);
+			distort?.destroy();
+			withLenis((l) => l.start?.());
+			root.classList.remove("intro-active");
+			root.classList.remove("intro-lock");
+			window.scrollTo(0, 0);
+			overlay.setAttribute("hidden", "");
+			removeListeners();
+		}
+	}
+
+	// Lenis is created in Base.astro and exposed as window.__lenis; it may not
+	// exist for the first frame or two, so retry briefly on RAF.
+	function withLenis(fn: (lenis: any) => void) {
+		let tries = 0;
+		(function grab() {
+			const l = (window as any).__lenis;
+			if (l) {
+				fn(l);
+				return;
+			}
+			if (tries++ < 60) requestAnimationFrame(grab);
+		})();
+	}
+</script>

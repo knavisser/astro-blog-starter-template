@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE, ATELIER_LABEL, ATELIER_COORDS } from "../../consts";
+import BadJujuLogo from "../BadJujuLogo.astro";
 
 interface Props {
 	image?: string;
@@ -23,7 +24,13 @@ const {
 
 	<div class="hero__bottom">
 		<div class="hero__bottom-left">
-			<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
+			<div class="hero__lockup">
+				<span class="hero__logo" aria-hidden="true">
+					<BadJujuLogo mode="solid" class="hero__logo-fill" />
+					<BadJujuLogo mode="solid" class="hero__logo-border" />
+				</span>
+				<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
+			</div>
 			<p class="mono hero__sub">stitched to be summoned · one of one</p>
 		</div>
 
@@ -34,7 +41,7 @@ const {
 		</div>
 	</div>
 
-	<a class="hero__scroll mono" href="#manifesto" data-cursor="link">
+	<a class="hero__scroll mono" href="#drop" data-cursor="link">
 		SCROLL <span aria-hidden="true">↓</span>
 	</a>
 </section>
@@ -183,6 +190,53 @@ const {
 		max-width: 80%;
 	}
 
+	/* logo + wordmark sit on one row; the logo is also the landing target the
+	   first-visit intro flies its drawn logo onto (see src/components/Intro.astro) */
+	.hero__lockup {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: clamp(0.6rem, 2vw, 1.6rem);
+	}
+
+	.hero__logo {
+		flex: none;
+		position: relative;
+		display: inline-block;
+		height: clamp(6.8rem, 19.4vw, 17rem);
+	}
+
+	.hero__logo :global(svg) {
+		display: block;
+		height: 100%;
+		width: auto;
+	}
+
+	/* fill: a softened inversion — exclusion blend with a grey (not pure white)
+	   pulls the dark/bright extremes toward the middle, so the logo stays legible
+	   over varied parts of the hero image instead of going fully dark/bright */
+	.hero__logo :global(.hero__logo-fill) {
+		color: #cccccc;
+		mix-blend-mode: exclusion;
+	}
+
+	/* border: a thin, true-white glowing outline (not blended), stacked on top */
+	.hero__logo :global(.hero__logo-border) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		pointer-events: none;
+		filter: drop-shadow(0 0 1px #ffffff)
+			drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+	}
+
+	.hero__logo :global(.hero__logo-border path) {
+		fill: none;
+		stroke: #ffffff;
+		stroke-width: 1.5;
+		vector-effect: non-scaling-stroke;
+	}
+
 	.hero__wordmark {
 		margin: 0;
 		font-size: clamp(2.5rem, 9.5vw, 9.5rem);
@@ -254,6 +308,10 @@ const {
 		}
 		.hero__bottom-left {
 			max-width: 100%;
+		}
+		.hero__logo {
+			height: clamp(5.3rem, 26vw, 8.25rem);
+			align-self: flex-start;
 		}
 		.hero__img {
 			width: calc(100% + 36px);

@@ -77,6 +77,13 @@ body {
 	overflow-x: hidden;
 }
 
+/* scroll lock while the first-visit intro overlay plays (set/cleared by
+   src/components/Intro.astro). Lives here because it targets html/body. */
+html.intro-lock,
+html.intro-lock body {
+	overflow: hidden;
+}
+
 main {
 	display: block;
 	min-height: 100dvh;

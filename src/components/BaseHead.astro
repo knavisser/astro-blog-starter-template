@@ -24,6 +24,20 @@ const fullTitle =
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light" />
 <meta name="theme-color" content="#F4F1EC" />
+
+{/* Homepage intro gate: synchronously (before first paint) decide whether the
+    cinematic intro should play. Only emitted on "/". See src/components/Intro.astro.
+    Plays once per device — the bj_intro_seen flag (set by Intro.astro) suppresses it
+    on later visits. To replay every load while tuning, comment the localStorage check
+    below AND set REPLAY_DEBUG=true in Intro.astro. */}
+{
+	Astro.url.pathname === "/" && (
+		<script
+			is:inline
+			set:html={`(function(){try{var d=document.documentElement;if(localStorage.getItem('bj_intro_seen')==='1')return;if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(location.pathname!=='/')return;d.classList.add('intro-active');window.__bjIntroFailsafe=setTimeout(function(){d.classList.remove('intro-active');d.classList.remove('intro-lock');},8000);}catch(e){}})();`}
+		/>
+	)
+}
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
