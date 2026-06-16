@@ -191,7 +191,12 @@ const loop = [...pieces, ...pieces];
 				const wrapRect = wrap.getBoundingClientRect();
 				const cardCenter = cardRect.left + cardRect.width / 2;
 				const wrapCenter = wrapRect.left + wrapRect.width / 2;
-				const delta = wrapCenter - cardCenter;
+				// cardCenter already reflects any current --shift, so add to it
+				// instead of replacing it — otherwise switching from one expanded
+				// card to another lands the new one off by the previous shift.
+				const currentShift =
+					parseFloat(shift.style.getPropertyValue("--shift")) || 0;
+				const delta = currentShift + wrapCenter - cardCenter;
 				shift.style.setProperty("--shift", `${delta.toFixed(2)}px`);
 				card.classList.add("is-expanded");
 				expanded = card;
@@ -278,6 +283,16 @@ const loop = [...pieces, ...pieces];
 			});
 		});
 
+		// clicking anywhere off the carousel rail resumes (closes the expansion)
+		const onDocClick = (e: MouseEvent) => {
+			if (!expanded) return;
+			const target = e.target as HTMLElement;
+			// clicks on the rail are handled by the card buttons themselves
+			if (target.closest(".drop__rail-wrap")) return;
+			closeExpansion();
+		};
+		document.addEventListener("click", onDocClick);
+
 		// reset on scroll-out
 		const io = new IntersectionObserver(
 			(entries) => {
@@ -301,6 +316,7 @@ const loop = [...pieces, ...pieces];
 				document.removeEventListener("pointermove", onPointerMove);
 				document.removeEventListener("pointerup", onPointerUp);
 				document.removeEventListener("pointercancel", onPointerUp);
+				document.removeEventListener("click", onDocClick);
 			},
 			{ once: true }
 		);
@@ -317,6 +333,15 @@ const loop = [...pieces, ...pieces];
 		color: var(--ink);
 		padding: var(--space-5) 0 var(--space-7);
 		overflow: hidden;
+		transition: padding-bottom 0.55s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	/* A focused card scales up from its top edge, so its bottom (the details
+	   panel) spills well past its layout box. overflow:hidden would clip that,
+	   so reserve extra bottom room while a card is open — only while paused, so
+	   the resting layout keeps its normal spacing. */
+	.drop[data-state="paused"] {
+		padding-bottom: 15rem;
 	}
 
 	.drop__head-wrap {
@@ -608,6 +633,10 @@ const loop = [...pieces, ...pieces];
 		}
 		.card.is-expanded {
 			transform: scale(1.15);
+		}
+		/* smaller cards + gentler scale need far less reserved room */
+		.drop[data-state="paused"] {
+			padding-bottom: 8rem;
 		}
 	}
 </style>

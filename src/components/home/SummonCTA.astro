@@ -1,5 +1,6 @@
 ---
 import Icon from "../Icon.astro";
+import BadJujuLogo from "../BadJujuLogo.astro";
 ---
 
 <section class="summon" id="summon-cta">
@@ -7,7 +8,10 @@ import Icon from "../Icon.astro";
 	<div class="summon__scrim" aria-hidden="true"></div>
 
 	<div class="summon__inner">
-		<span class="summon__logo" aria-hidden="true"></span>
+		<span class="summon__logo" aria-hidden="true">
+			<BadJujuLogo mode="solid" class="summon__logo-fill" />
+			<BadJujuLogo mode="solid" class="summon__logo-border" />
+		</span>
 
 		<div class="summon__body" data-reveal>
 			<p class="mono kicker">// III. SUMMON</p>
@@ -101,17 +105,42 @@ import Icon from "../Icon.astro";
 		gap: var(--space-3);
 	}
 
-	/* the logo inverts whatever moves beneath it: backdrop-filter samples the
-	   marble actually rendered behind the element, and the mask clips that
-	   inverted backdrop to the logo silhouette */
+	/* same treatment as the hero logo so the two read identically: a softened
+	   exclusion-blend fill (legible over the moving marble) plus a thin,
+	   non-blended white outline stacked on top. No z-index here keeps the fill's
+	   blend reaching the marble layer behind it. */
 	.summon__logo {
+		position: relative;
 		display: block;
-		width: 84px;
-		height: 84px;
-		-webkit-backdrop-filter: invert(1);
-		backdrop-filter: invert(1);
-		-webkit-mask: url("/png/badjuju_logo.png") center / contain no-repeat;
-		mask: url("/png/badjuju_logo.png") center / contain no-repeat;
+		width: 88px;
+	}
+
+	.summon__logo :global(svg) {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.summon__logo :global(.summon__logo-fill) {
+		color: #cccccc;
+		mix-blend-mode: exclusion;
+	}
+
+	.summon__logo :global(.summon__logo-border) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		pointer-events: none;
+		filter: drop-shadow(0 0 1px #ffffff)
+			drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+	}
+
+	.summon__logo :global(.summon__logo-border path) {
+		fill: none;
+		stroke: #ffffff;
+		stroke-width: 1.5;
+		vector-effect: non-scaling-stroke;
 	}
 
 	.summon__body {
