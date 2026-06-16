@@ -172,6 +172,7 @@ const loop = [...pieces, ...pieces];
 			if (!expanded) return;
 			expanded.classList.remove("is-expanded");
 			expanded = null;
+			wrap.style.paddingBottom = "";
 			if (opts.instant) {
 				transferShiftIntoPos();
 			} else {
@@ -198,6 +199,26 @@ const loop = [...pieces, ...pieces];
 					parseFloat(shift.style.getPropertyValue("--shift")) || 0;
 				const delta = currentShift + wrapCenter - cardCenter;
 				shift.style.setProperty("--shift", `${delta.toFixed(2)}px`);
+
+				// Reserve vertical room for the about-to-scale card. It scales up
+				// from its top edge, so its bottom (the details panel) spills below
+				// the rail-wrap — whose edge-fade mask composites to its own box and
+				// clips that overflow (this is the real culprit, not the section's
+				// overflow). Measure the final height and read the scale from CSS so
+				// JS stays in sync, then pad the wrap exactly enough — responsive,
+				// no magic numbers.
+				const detailsInner = card.querySelector<HTMLElement>(
+					".card__details-inner"
+				);
+				const detailsH = detailsInner ? detailsInner.scrollHeight : 0;
+				const scale =
+					parseFloat(
+						getComputedStyle(card).getPropertyValue("--expand-scale")
+					) || 1;
+				const expandedH = card.offsetHeight + detailsH;
+				const overflow = Math.max(0, (scale - 1) * expandedH);
+				wrap.style.paddingBottom = `${Math.round(overflow) + 8}px`;
+
 				card.classList.add("is-expanded");
 				expanded = card;
 			});
@@ -333,15 +354,6 @@ const loop = [...pieces, ...pieces];
 		color: var(--ink);
 		padding: var(--space-5) 0 var(--space-7);
 		overflow: hidden;
-		transition: padding-bottom 0.55s cubic-bezier(0.2, 0.7, 0.1, 1);
-	}
-
-	/* A focused card scales up from its top edge, so its bottom (the details
-	   panel) spills well past its layout box. overflow:hidden would clip that,
-	   so reserve extra bottom room while a card is open — only while paused, so
-	   the resting layout keeps its normal spacing. */
-	.drop[data-state="paused"] {
-		padding-bottom: 15rem;
 	}
 
 	.drop__head-wrap {
@@ -403,6 +415,9 @@ const loop = [...pieces, ...pieces];
 			#000 96%,
 			transparent 100%
 		);
+		/* the script grows padding-bottom while a card is focused so the mask's
+		   box (and thus its clip) extends to cover the scaled-up details */
+		transition: padding-bottom 0.55s cubic-bezier(0.2, 0.7, 0.1, 1);
 	}
 
 	.drop__rail-wrap.is-dragging {
@@ -435,13 +450,15 @@ const loop = [...pieces, ...pieces];
 	.card {
 		flex: 0 0 var(--card-w);
 		width: var(--card-w);
+		/* read by the expansion script to reserve exactly enough room below */
+		--expand-scale: 1.3;
 		transform-origin: center top;
 		transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.1, 1);
 	}
 
 	.card.is-expanded {
 		z-index: 5;
-		transform: scale(1.3);
+		transform: scale(var(--expand-scale));
 	}
 
 	.drop[data-state="paused"] .card:not(.is-expanded) {
@@ -631,12 +648,8 @@ const loop = [...pieces, ...pieces];
 		.drop__head-right {
 			text-align: left;
 		}
-		.card.is-expanded {
-			transform: scale(1.15);
-		}
-		/* smaller cards + gentler scale need far less reserved room */
-		.drop[data-state="paused"] {
-			padding-bottom: 8rem;
+		.card {
+			--expand-scale: 1.15;
 		}
 	}
 </style>
