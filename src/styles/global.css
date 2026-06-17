@@ -66,7 +66,7 @@ html.lenis-smooth {
 
 body {
 	margin: 0;
-	min-height: 100dvh;
+	min-height: 100svh;
 	font-family: var(--font-body);
 	font-size: 16px;
 	font-weight: 400;
@@ -86,7 +86,7 @@ html.intro-lock body {
 
 main {
 	display: block;
-	min-height: 100dvh;
+	min-height: 100svh;
 }
 
 a {

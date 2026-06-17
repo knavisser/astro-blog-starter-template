@@ -8,6 +8,11 @@ import cloudflare from "@astrojs/cloudflare";
 
 export default defineConfig({
 	site: "https://example.com",
+	// The portfolio used to live at /products; keep old links working.
+	redirects: {
+		"/products": "/portfolio",
+		"/products/[slug]": "/portfolio/[slug]",
+	},
 	integrations: [mdx(), sitemap(), icon({ include: { tabler: ["*"] } })],
 	adapter: cloudflare({
 		platformProxy: {

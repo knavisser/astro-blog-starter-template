@@ -28,6 +28,7 @@
 		"zod": "^3.25.76"
 	},
 	"devDependencies": {
+		"sharp": "0.34.5",
 		"wrangler": "4.56.0"
 	},
 	"engines": {
@@ -41,6 +42,7 @@
 		"check": "astro build && tsc && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "astro dev",
+		"optimize:images": "node scripts/optimize-images.mjs",
 		"preview": "astro build && wrangler dev"
 	},
 	"type": "module"

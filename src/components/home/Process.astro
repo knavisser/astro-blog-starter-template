@@ -45,7 +45,7 @@ const steps = [
 			steps.map((step) => (
 				<li class="step" data-reveal>
 					<figure class="step__figure">
-						<img src={step.image} alt={`${step.label} stage`} loading="lazy" />
+						<img src={step.image} alt={`${step.label} stage`} loading="lazy" decoding="async" />
 					</figure>
 					<div class="step__body">
 						<div class="step__head">

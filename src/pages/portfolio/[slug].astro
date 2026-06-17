@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import type { GetStaticPaths } from "astro";
 import Icon from "../../components/Icon.astro";
-import { SHOP_URL, objectLabel } from "../../consts";
+import { objectLabel } from "../../consts";
 
 export const getStaticPaths: GetStaticPaths = async () => {
 	const pieces = await getCollection("pieces");
@@ -27,9 +27,9 @@ const completed = data.dateCompleted
 >
 	<article class="piece">
 		<div class="piece__top">
-			<a class="back mono" href="/products" data-cursor="link">
+			<a class="back mono" href="/portfolio" data-cursor="link">
 				<Icon name="arrow-left" size={14} />
-				<span>BACK TO PRODUCTS</span>
+				<span>BACK TO PORTFOLIO</span>
 			</a>
 		</div>
 
@@ -65,17 +65,6 @@ const completed = data.dateCompleted
 						</dd>
 					</div>
 				</dl>
-
-				<a
-					class="shop-link mono"
-					href={SHOP_URL}
-					target="_blank"
-					rel="noopener noreferrer"
-					data-cursor="link"
-				>
-					<span>AVAILABLE IN THE SHOP</span>
-					<span class="shop-link__arrow" aria-hidden="true">→</span>
-				</a>
 			</div>
 
 			<figure class="lead__figure">
@@ -94,7 +83,7 @@ const completed = data.dateCompleted
 		background: var(--bone);
 		color: var(--ink);
 		padding: calc(var(--header-h) + var(--space-4)) var(--gutter) var(--space-6);
-		min-height: 100dvh;
+		min-height: 100svh;
 	}
 
 	.piece__top {
@@ -117,33 +106,6 @@ const completed = data.dateCompleted
 	.back:hover {
 		background: var(--ink);
 		color: var(--bone);
-	}
-
-	.shop-link {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.6rem;
-		align-self: flex-start;
-		margin-top: var(--space-2);
-		padding: 0.7rem 1.1rem;
-		font-size: 0.65rem;
-		letter-spacing: 0.22em;
-		color: var(--bone);
-		background: var(--ink);
-		transition: background 0.25s ease, color 0.25s ease;
-	}
-
-	.shop-link:hover {
-		background: var(--acid);
-		color: var(--ink);
-	}
-
-	.shop-link__arrow {
-		transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.1, 1);
-	}
-
-	.shop-link:hover .shop-link__arrow {
-		transform: translateX(4px);
 	}
 
 	.lead {

@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro";
 import { getCollection } from "astro:content";
 import Cardinal from "../components/sigils/Cardinal.astro";
 import ToastStack from "../components/ToastStack.astro";
-import { SHOP_URL, objectLabel } from "../consts";
+import { objectLabel } from "../consts";
 
 const pieces = await getCollection("pieces");
 
@@ -23,29 +23,17 @@ const stats = {
 ---
 
 <Base
-	title="products"
-	description="one of one hoodies. available now and from the archive."
+	title="portfolio"
+	description="one of one hoodies. a portfolio of current and archived pieces."
 >
 	<section class="hero-strip">
 		<div class="hero-strip__inner">
-			<p class="mono kicker" data-reveal>// PORTFOLIO · PRODUCTS</p>
+			<p class="mono kicker" data-reveal>// PORTFOLIO</p>
 			<h1 class="display title" data-reveal>THE · COLLECTION</h1>
 			<p class="lede" data-reveal>
-				A showcase of one-of-one pieces, current and archived. To buy what's in
-				stock, visit the shop. Bespoke commissions by inquiry.
+				A showcase of one-of-one pieces, current and archived. Bespoke
+				commissions by inquiry.
 			</p>
-
-			<a
-				class="shop-cta mono"
-				href={SHOP_URL}
-				target="_blank"
-				rel="noopener noreferrer"
-				data-cursor="link"
-				data-reveal
-			>
-				<span>SHOP THE COLLECTION</span>
-				<span class="shop-cta-arrow" aria-hidden="true">→</span>
-			</a>
 
 			<dl class="stats mono" data-reveal-stagger>
 				<div>
@@ -83,7 +71,7 @@ const stats = {
 					>
 						<a
 							class="tile__link"
-							href={`/products/${piece.id}`}
+							href={`/portfolio/${piece.id}`}
 							data-cursor="zoom"
 							data-cursor-label="VIEW"
 						>
@@ -157,53 +145,6 @@ const stats = {
 		opacity: 0.7;
 		margin: 0;
 		line-height: 1.55;
-	}
-
-	/* primary conversion CTA → SumUp shop (mirrors .empty__cta treatment) */
-	.shop-cta {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.6rem;
-		margin-top: var(--space-3);
-		padding: 0.75rem 1.2rem;
-		font-size: 0.65rem;
-		letter-spacing: 0.22em;
-		color: var(--bone);
-		background: var(--ink);
-		position: relative;
-		overflow: hidden;
-		transition: color 0.4s ease;
-	}
-
-	.shop-cta::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		background: var(--acid);
-		transform: translateY(101%);
-		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
-		z-index: 0;
-	}
-
-	.shop-cta > * {
-		position: relative;
-		z-index: 1;
-	}
-
-	.shop-cta:hover {
-		color: var(--ink);
-	}
-
-	.shop-cta:hover::before {
-		transform: translateY(0);
-	}
-
-	.shop-cta-arrow {
-		transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.1, 1);
-	}
-
-	.shop-cta:hover .shop-cta-arrow {
-		transform: translateX(4px);
 	}
 
 	.stats {

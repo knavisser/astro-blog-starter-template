@@ -42,7 +42,7 @@ const looks = [
 					style={`--i: ${i}`}
 				>
 					<div class="look__img-wrap">
-						<img class="look__img" src={look.image} alt={look.caption} loading="lazy" />
+						<img class="look__img" src={look.image} alt={look.caption} loading="lazy" decoding="async" />
 					</div>
 					<figcaption class="look__cap mono">
 						<span class="look__no">/// {String(i + 1).padStart(2, "0")}</span>

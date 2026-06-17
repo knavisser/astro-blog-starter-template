@@ -45,6 +45,7 @@ const loop = [...pieces, ...pieces];
 										src={piece.data.heroImage}
 										alt={objectLabel(piece.data.index)}
 										loading={idx < 3 ? "eager" : "lazy"}
+										decoding="async"
 										draggable="false"
 									/>
 								</figure>
@@ -66,7 +67,7 @@ const loop = [...pieces, ...pieces];
 										<ul class="card__materials mono">
 											{piece.data.materials.map((m: string) => <li>{m}</li>)}
 										</ul>
-										<a class="card__cta mono" href={`/products/${piece.id}`} data-cursor="link">
+										<a class="card__cta mono" href={`/portfolio/${piece.id}`} data-cursor="link">
 											<span>VIEW PIECE</span>
 											<Icon name="arrow-up-right" size={14} />
 										</a>
@@ -125,6 +126,7 @@ const loop = [...pieces, ...pieces];
 		// ---- render loop ----
 		let lastT = 0;
 		let rafId = 0;
+		let running = false;
 		const tick = (t: number) => {
 			if (!lastT) lastT = t;
 			const dt = Math.min(0.05, (t - lastT) / 1000);
@@ -152,7 +154,21 @@ const loop = [...pieces, ...pieces];
 			}
 			rafId = requestAnimationFrame(tick);
 		};
-		rafId = requestAnimationFrame(tick);
+
+		// Only run the drift loop while the carousel is on-screen — no point
+		// burning a frame budget (and battery) animating a transform nobody sees.
+		const startLoop = () => {
+			if (running) return;
+			running = true;
+			lastT = 0; // avoid a dt spike after being paused
+			rafId = requestAnimationFrame(tick);
+		};
+		const stopLoop = () => {
+			if (!running) return;
+			running = false;
+			cancelAnimationFrame(rafId);
+		};
+		startLoop();
 
 		// ---- expansion ----
 		const transferShiftIntoPos = () => {
@@ -314,11 +330,16 @@ const loop = [...pieces, ...pieces];
 		};
 		document.addEventListener("click", onDocClick);
 
-		// reset on scroll-out
+		// pause the loop (and reset any expansion) when scrolled out of view
 		const io = new IntersectionObserver(
 			(entries) => {
 				entries.forEach((entry) => {
-					if (!entry.isIntersecting && expanded) closeExpansion();
+					if (entry.isIntersecting) {
+						startLoop();
+					} else {
+						stopLoop();
+						if (expanded) closeExpansion();
+					}
 				});
 			},
 			{ threshold: 0.05 }
@@ -333,7 +354,8 @@ const loop = [...pieces, ...pieces];
 		document.addEventListener(
 			"astro:before-swap",
 			() => {
-				cancelAnimationFrame(rafId);
+				stopLoop();
+				io.disconnect();
 				document.removeEventListener("pointermove", onPointerMove);
 				document.removeEventListener("pointerup", onPointerUp);
 				document.removeEventListener("pointercancel", onPointerUp);
@@ -495,14 +517,9 @@ const loop = [...pieces, ...pieces];
 		height: 100%;
 		object-fit: cover;
 		object-position: center 25%;
-		filter: saturate(0.95);
-		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1), filter 0.5s ease;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
 		pointer-events: none;
 		-webkit-user-drag: none;
-	}
-
-	.card.is-expanded .card__img {
-		filter: saturate(1.08);
 	}
 
 	.card__base {
