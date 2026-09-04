@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { z } from "astro/zod";
+import { isCustomsOpen } from "../../lib/site-flags";
 
 export const prerender = false;
 
@@ -137,6 +138,15 @@ export const POST: APIRoute = async ({ request, locals, clientAddress }) => {
 	// payload BEFORE validation so it can never cause a false "invalid fields" 400.
 	if ((text.hpot ?? "").trim().length > 0) {
 		return Response.json({ ok: true }, { status: 200 });
+	}
+
+	// Customs window (Toast_Customs_Open). The form disables its submit button
+	// while closed; this is the server-side guard so it can't be bypassed.
+	if (!(await isCustomsOpen(locals))) {
+		return Response.json(
+			{ ok: false, error: "Customs are closed right now." },
+			{ status: 403 }
+		);
 	}
 
 	const parsed = InquirySchema.safeParse(text);

@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { SHOP_URL } from "../../consts";
+import { readFlag, isCustomsOpen } from "../../lib/site-flags";
 
 export const prerender = false;
 
@@ -9,44 +10,6 @@ const CACHE_SECONDS = 600;
 const MAX_PRODUCTS = 30;
 // Per-request fetch timeout against the SumUp store.
 const FETCH_TIMEOUT_MS = 6000;
-
-/** The Cloudflare KV binding ("KV" → the badjuju_config namespace), if present. */
-function getKV(
-	locals: App.Locals
-): { get(key: string): Promise<string | null> } | null {
-	const kv = (locals as any)?.runtime?.env?.KV;
-	return kv && typeof kv.get === "function" ? kv : null;
-}
-
-/** Same-named runtime/process env var, used as a local-dev (.dev.vars) fallback. */
-function getEnvVar(locals: App.Locals, key: string): string | null {
-	const v = (locals as any)?.runtime?.env?.[key];
-	if (typeof v === "string") return v;
-	const p = (globalThis as any).process?.env?.[key];
-	return typeof p === "string" ? p : null;
-}
-
-/**
- * Read a flag: KV first (production source of truth), falling back to an env var
- * of the same name so `.dev.vars` can drive the toasts during local `astro dev`,
- * where KV is an empty local store. An empty-string KV value is a real value
- * (e.g. Toast_Stock_Override="" means "auto") and is returned as-is.
- */
-async function readFlag(
-	locals: App.Locals,
-	kv: ReturnType<typeof getKV>,
-	key: string
-): Promise<string | null> {
-	if (kv) {
-		try {
-			const v = await kv.get(key);
-			if (v !== null && v !== undefined) return v;
-		} catch {
-			/* fall through to env */
-		}
-	}
-	return getEnvVar(locals, key);
-}
 
 /** Product <loc> URLs from the SumUp products sitemap. */
 function extractProductUrls(xml: string): string[] {
@@ -125,36 +88,12 @@ async function getStockAvailable(base: string): Promise<boolean> {
 	return available;
 }
 
-/** Current calendar date in Amsterdam (handles CET/CEST DST) as a yyyymmdd int. */
-export function amsterdamDateNumber(now: Date = new Date()): number {
-	const parts = new Intl.DateTimeFormat("en-CA", {
-		timeZone: "Europe/Amsterdam",
-		year: "numeric",
-		month: "2-digit",
-		day: "2-digit",
-	}).formatToParts(now);
-	const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
-	return get("year") * 10000 + get("month") * 100 + get("day");
-}
-
-/** Parse a "dd/mm/yyyy" cutoff to a yyyymmdd int, or null if malformed. */
-export function parseCutoffDate(raw: string): number | null {
-	const m = raw.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-	if (!m) return null;
-	const d = Number(m[1]);
-	const mo = Number(m[2]);
-	const y = Number(m[3]);
-	if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
-	return y * 10000 + mo * 100 + d;
-}
-
 export const GET: APIRoute = async ({ locals }) => {
 	const base = SHOP_URL.replace(/\/+$/, "");
-	const kv = getKV(locals);
 
 	// --- Stock: Toast_Stock_Override -----------------------------------------
 	//   ""/absent → auto-detect from the store · "0" → force hidden · "1" → show
-	const ov = ((await readFlag(locals, kv, "Toast_Stock_Override")) ?? "").trim();
+	const ov = ((await readFlag(locals, "Toast_Stock_Override")) ?? "").trim();
 	let stockAvailable: boolean;
 	if (ov === "1") stockAvailable = true;
 	else if (ov === "0") stockAvailable = false;
@@ -162,9 +101,8 @@ export const GET: APIRoute = async ({ locals }) => {
 
 	// --- Customs: Toast_Customs_Open ------------------------------------------
 	//   dd/mm/yyyy cutoff; open while today (Amsterdam) is on or before it.
-	const customsRaw = await readFlag(locals, kv, "Toast_Customs_Open");
-	const cutoff = customsRaw ? parseCutoffDate(customsRaw) : null;
-	const customsOpen = cutoff !== null && amsterdamDateNumber() <= cutoff;
+	//   Drives both the customs toast and the inquiry form's submit button.
+	const customsOpen = await isCustomsOpen(locals);
 
 	// No-store so a KV change is reflected on the next page load. The expensive
 	// stock scrape is still cached server-side inside getStockAvailable.

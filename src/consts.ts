@@ -8,6 +8,10 @@ export const CONTACT_EMAIL = "info@badjuju.net";
 // hoodies. Point this at the brand subdomain once SumUp's custom domain is
 // connected; until then it can hold the raw SumUp store URL.
 export const SHOP_URL = "https://shop.badjuju.net";
+// Where visitors land when we link to the shop. The bare SHOP_URL origin is
+// kept for server-side stock detection (sitemap crawl); every outbound link
+// should use this so people land on the product grid, not the storefront home.
+export const SHOP_PRODUCTS_URL = `${SHOP_URL}/products`;
 
 // Pieces are identified by number only. Build the display label from a piece's
 // index, e.g. objectLabel(1) === "OBJECT 001".

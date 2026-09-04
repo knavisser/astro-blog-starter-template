@@ -4,7 +4,7 @@
 // flag is true and it hasn't been dismissed this session.
 //   - stock:   in-stock detection on the SumUp store (auto + manual override)
 //   - customs: purely manual flag, shown only when customs are open
-import { SHOP_URL } from "../consts";
+import { SHOP_PRODUCTS_URL } from "../consts";
 
 const toasts = [
 	{
@@ -14,7 +14,7 @@ const toasts = [
 		kicker: "// LIVE NOW",
 		message: "Unique stock available",
 		cta: "Summon now",
-		href: SHOP_URL,
+		href: SHOP_PRODUCTS_URL,
 		external: true,
 	},
 	{
