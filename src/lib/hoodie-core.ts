@@ -25,7 +25,7 @@ export interface CollectionInfo {
 	name: string;
 	/** yyyy-mm-dd, also the default completion date of its hoodies. */
 	date?: string;
-	/** "<object number>/<file name>", e.g. "2/_DSC9884.jpg". Defaults to the first hoodie's cover. */
+	/** "<object number>/<file name>", e.g. "15/_DSC9884.jpg". Defaults to the first hoodie's cover. */
 	cover?: string;
 }
 
@@ -72,7 +72,7 @@ export function folderNumber(folder: string): number | null {
 	return match ? Number(match[1]) : null;
 }
 
-/** A specific photo of a hoodie: "22/_DSC9696.jpg" -> { number: 22, file: "_DSC9696.jpg" } */
+/** A specific photo of a hoodie: "17/_DSC9696.jpg" -> { number: 22, file: "_DSC9696.jpg" } */
 export function parsePhotoRef(ref: string): { number: number; file: string } | null {
 	const match = /^(\d+)\/([^/]+)$/.exec(ref);
 	return match ? { number: Number(match[1]), file: match[2] } : null;

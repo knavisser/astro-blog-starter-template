@@ -47,7 +47,7 @@ export function collectionOf(hoodie: HoodieEntry): CollectionEntry | undefined {
 	return collections.find((c) => c.key === hoodie.collection);
 }
 
-/** One specific photo, e.g. getPhoto("22/_DSC9696.jpg"), plus the hoodie it belongs to. */
+/** One specific photo, e.g. getPhoto("17/_DSC9696.jpg"), plus the hoodie it belongs to. */
 export function getPhoto(ref: string): { hoodie: HoodieEntry; image: ImageMetadata } {
 	const parsed = parsePhotoRef(ref);
 	const hoodie = parsed ? hoodies.find((h) => h.number === parsed.number) : undefined;

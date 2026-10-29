@@ -21,15 +21,15 @@ export const objectLabel = (index: number) =>
 // The photos the home hero slides through, in order, as "<object number>/<file
 // name>". The first one also fills the intro hand-off and is the default share
 // image.
-export const HERO_PHOTOS = ["19/_DSC9579.jpg", "15/_DSC7129.jpg", "18/_DSC9846.jpg"];
+export const HERO_PHOTOS = ["27/_DSC9579.jpg", "28/_DSC7129.jpg", "21/_DSC9846.jpg"];
 // Phones and tablets held upright (HERO_MOBILE_MEDIA) slide through these
 // portrait shots instead. x is where a photo sits on a phone screen, as an
 // object-position x in %: 50 (the default) is centred, 100 lines up its right
 // edge. The two lists don't need to be the same length.
 export const HERO_PHOTOS_MOBILE: { photo: string; x?: number }[] = [
-	{ photo: "25/_DSC7033.jpg", x: 100 },
-	{ photo: "17/BadJujuShoot-28.jpg", x: 35 },
-	{ photo: "15/_DSC7143.jpg" },
+	{ photo: "22/_DSC7033.jpg", x: 100 },
+	{ photo: "2/BadJujuShoot-28.jpg", x: 35 },
+	{ photo: "28/_DSC7143.jpg" },
 ];
 export const HERO_MOBILE_MEDIA = "(max-width: 1024px) and (orientation: portrait)";
 // The hero's shape on those screens (width / height). A phone screen is far

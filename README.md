@@ -55,7 +55,7 @@ The folder number is the object number: folder `27 - ...` becomes `OBJECT 027` a
 - the featured slider shows the hoodies of one collection, set in [src/pages/index.astro](src/pages/index.astro) (`<FeaturedDrop collection="ndsm" />`)
 - the hero slides through `HERO_PHOTOS` in [src/consts.ts](src/consts.ts) (the first one is also the intro's photo and the share image); phones and tablets held upright slide through `HERO_PHOTOS_MOBILE` instead, each with an optional `x` for where it sits on a phone screen
 
-The reel and the lookbook pick specific photos as `<object number>/<file name>`, e.g. `18/_DSC9833.jpg`:
+The reel and the lookbook pick specific photos as `<object number>/<file name>`, e.g. `21/_DSC9833.jpg`:
 
 - the NDSM reel lists its frames in [src/pages/index.astro](src/pages/index.astro). In the page it's a row of overlapping prints in the same order, with a button on top; the button slides them out into a full-screen strip where every scroll, swipe or arrow key moves exactly one photo. The X, Esc, or scrolling past either end slides them back into the row. `CollectionReel` works for any collection, so a new one only needs another `<CollectionReel collection="..." frames={[...]} />`
 - the lookbook lists its four photos in [src/components/home/Lookbook.astro](src/components/home/Lookbook.astro)
