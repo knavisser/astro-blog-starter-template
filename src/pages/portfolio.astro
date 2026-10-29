@@ -1,25 +1,59 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import Cardinal from "../components/sigils/Cardinal.astro";
 import ToastStack from "../components/ToastStack.astro";
-import { objectLabel } from "../consts";
-
-const pieces = await getCollection("pieces");
+import { objectLabel, PHOTO_WIDTHS } from "../consts";
+import { hoodies, collections, collectionOf } from "../lib/hoodies";
+import { coverSizes, type Box } from "../lib/cover-sizes";
 
 // One grid: featured pieces always lead, everything else follows. Within each
-// group pieces are ordered by index. The status pill is the only divider.
-const orderedPieces = [...pieces].sort((a, b) => {
-	const aLead = a.data.status === "featured" ? 0 : 1;
-	const bLead = b.data.status === "featured" ? 0 : 1;
-	return aLead - bLead || a.data.index - b.data.index;
+// group pieces are ordered by number. The status pill is the only divider.
+const orderedHoodies = [...hoodies].sort((a, b) => {
+	const aLead = a.status === "featured" ? 0 : 1;
+	const bLead = b.status === "featured" ? 0 : 1;
+	return aLead - bLead || a.number - b.number;
 });
 
 const stats = {
-	total: pieces.length,
-	featured: pieces.filter((p) => p.data.status === "featured").length,
-	archive: pieces.filter((p) => p.data.status === "archive").length,
+	total: hoodies.length,
+	featured: hoodies.filter((h) => h.status === "featured").length,
+	archive: hoodies.filter((h) => h.status === "archive").length,
 };
+
+const pad = (n: number) => String(n).padStart(3, "0");
+
+// Mosaic rhythm by position. Tall takes priority so no tile is ever both tall
+// and wide (a 3×2 block can't backfill the grid and orphans). The filter
+// script below reapplies the same rhythm to whichever tiles are visible.
+type Shape = "normal" | "tall" | "wide";
+const shapeAt = (i: number): Shape => (i % 3 === 1 ? "tall" : i % 5 === 4 ? "wide" : "normal");
+
+// How wide each tile shape is and how it's shaped (width / height), so every
+// cover gets a file wide enough for how far it's cropped. A tall tile spans
+// two rows of normal tiles, which makes it far narrower than its 4:7 minimum.
+const tileBoxes: Record<Shape, Box[]> = {
+	normal: [
+		{ media: "(max-width: 1100px)", width: "50vw", ratio: 4 / 5 },
+		{ width: "33vw", ratio: 4 / 5 },
+	],
+	tall: [
+		{ media: "(max-width: 720px)", width: "100vw", ratio: 4 / 7 },
+		{ media: "(max-width: 1100px)", width: "50vw", ratio: 0.36 },
+		{ width: "33vw", ratio: 0.36 },
+	],
+	wide: [
+		{ media: "(max-width: 720px)", width: "100vw", ratio: 21 / 12 },
+		{ media: "(max-width: 1100px)", width: "75vw", ratio: 21 / 12 },
+		{ width: "50vw", ratio: 21 / 12 },
+	],
+};
+// a cover's sizes in each shape; the filter script below swaps them as tiles change shape
+const tileSizes = (cover: ImageMetadata) =>
+	Object.fromEntries(
+		Object.entries(tileBoxes).map(([shape, boxes]) => [shape, coverSizes(cover.width / cover.height, boxes)])
+	) as Record<Shape, string>;
 ---
 
 <Base
@@ -38,15 +72,15 @@ const stats = {
 			<dl class="stats mono" data-reveal-stagger>
 				<div>
 					<dt>// TOTAL</dt>
-					<dd>{String(stats.total).padStart(3, "0")}</dd>
+					<dd>{pad(stats.total)}</dd>
 				</div>
 				<div>
 					<dt>// FEATURED</dt>
-					<dd>{String(stats.featured).padStart(3, "0")}</dd>
+					<dd>{pad(stats.featured)}</dd>
 				</div>
 				<div>
 					<dt>// ARCHIVED</dt>
-					<dd>{String(stats.archive).padStart(3, "0")}</dd>
+					<dd>{pad(stats.archive)}</dd>
 				</div>
 			</dl>
 
@@ -54,62 +88,190 @@ const stats = {
 		</div>
 	</section>
 
-	<section class="section">
-		<ol class="grid">
-			{
-				orderedPieces.map((piece, i) => (
-					<li
-						class:list={[
-							"tile",
-							{
-								"tile--tall": i % 3 === 1,
-								// tall takes priority so no tile is ever both tall and
-								// wide (a 3×2 block can't backfill the grid and orphans)
-								"tile--wide": i % 5 === 4 && i % 3 !== 1,
-							},
-						]}
-					>
+	{
+		collections.length > 0 && (
+			<section class="collections" aria-labelledby="collections-title">
+				<div class="collections__inner">
+					<div class="collections__head">
+						<h2 class="mono kicker" id="collections-title">
+							// COLLECTIONS
+						</h2>
 						<a
-							class="tile__link"
-							href={`/portfolio/${piece.id}`}
-							data-cursor="zoom"
-							data-cursor-label="VIEW"
+							class="mono filter-all is-active"
+							href="/portfolio"
+							data-filter=""
+							data-cursor="link"
+							aria-current="true"
 						>
-							<figure class="tile__figure">
-								<img
-									class="tile__img"
-									src={piece.data.heroImage}
-									alt={objectLabel(piece.data.index)}
-									loading={i < 3 ? "eager" : "lazy"}
-								/>
-								<span
-									class:list={[
-										"mono",
-										"tile__status",
-										`is-${piece.data.status}`,
-									]}
-								>
-									{piece.data.status.toUpperCase()}
-								</span>
-							</figure>
-							<div class="tile__caption mono">
-								<span class="tile__idx">
-									/// {String(piece.data.index).padStart(3, "0")}
-								</span>
-								<span class="tile__name">{objectLabel(piece.data.index)}</span>
-								<span class="tile__sub">
-									{piece.data.earStyle.toUpperCase()} · DIY STITCH
-								</span>
-							</div>
+							ALL <span class="filter-all__count">{pad(hoodies.length)}</span>
 						</a>
-					</li>
-				))
+					</div>
+
+					<ul class="collections__list">
+						{collections.map((collection) => (
+							<li>
+								<a
+									class="collection"
+									href={`/portfolio?collection=${collection.key}`}
+									data-filter={collection.key}
+									data-filter-name={collection.name}
+									data-cursor="zoom"
+									data-cursor-label="FILTER"
+								>
+									{collection.cover && (
+										<Image
+											class="collection__img"
+											src={collection.cover}
+											alt=""
+											widths={PHOTO_WIDTHS}
+											sizes="(max-width: 1680px) 100vw, 1680px"
+										/>
+									)}
+									<span class="collection__veil" aria-hidden="true" />
+									<span class="display collection__name">{collection.name}</span>
+									<span class="mono collection__meta">
+										<span>{pad(collection.count)} PIECES</span>
+										{collection.date && <span>{collection.date}</span>}
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</div>
+			</section>
+		)
+	}
+
+	<section class="section">
+		<p class="mono grid-status" data-grid-status aria-live="polite">
+			SHOWING {pad(hoodies.length)} OF {pad(hoodies.length)}
+		</p>
+		<ol class="grid" data-grid>
+			{
+				orderedHoodies.map((hoodie, i) => {
+					const shape = shapeAt(i);
+					const sizes = tileSizes(hoodie.cover);
+					const collection = collectionOf(hoodie);
+					return (
+						<li
+							class:list={["tile", { "tile--tall": shape === "tall", "tile--wide": shape === "wide" }]}
+							data-collection={hoodie.collection ?? ""}
+						>
+							<a
+								class="tile__link"
+								href={`/portfolio/${hoodie.id}`}
+								data-cursor="zoom"
+								data-cursor-label="VIEW"
+							>
+								<figure class="tile__figure">
+									<Image
+										class="tile__img"
+										src={hoodie.cover}
+										alt={objectLabel(hoodie.number)}
+										widths={PHOTO_WIDTHS}
+										sizes={sizes[shape]}
+										data-sizes={JSON.stringify(sizes)}
+										loading={i < 3 ? "eager" : "lazy"}
+									/>
+									<span class:list={["mono", "tile__status", `is-${hoodie.status}`]}>
+										{hoodie.status.toUpperCase()}
+									</span>
+								</figure>
+								<div class="tile__caption mono">
+									<span class="tile__idx">/// {hoodie.id}</span>
+									<span class="tile__name">{objectLabel(hoodie.number)}</span>
+									<span class="tile__sub">
+										{[collection?.name, hoodie.completed].filter(Boolean).join(" · ")}
+									</span>
+								</div>
+							</a>
+						</li>
+					);
+				})
 			}
 		</ol>
 	</section>
 
 	<ToastStack />
 </Base>
+
+<script>
+	// Collection filter. The links stay real (/portfolio?collection=ndsm can be
+	// shared or opened in a new tab), but a plain click filters in place.
+	function bindCollectionFilter() {
+		const grid = document.querySelector<HTMLElement>("[data-grid]");
+		if (!grid) return;
+		const tiles = Array.from(grid.querySelectorAll<HTMLElement>(".tile"));
+		const filters = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-filter]"));
+		const status = document.querySelector<HTMLElement>("[data-grid-status]");
+		const known = new Set(filters.map((f) => f.dataset.filter ?? ""));
+		const pad = (n: number) => String(n).padStart(3, "0");
+		let current = "";
+
+		const apply = (key: string, animate: boolean) => {
+			current = known.has(key) ? key : "";
+			let shown = 0;
+			for (const tile of tiles) {
+				const visible = !current || tile.dataset.collection === current;
+				tile.hidden = !visible;
+				if (!visible) continue;
+				// same rhythm as the server render, counted over visible tiles
+				const shape = shown % 3 === 1 ? "tall" : shown % 5 === 4 ? "wide" : "normal";
+				tile.classList.toggle("tile--tall", shape === "tall");
+				tile.classList.toggle("tile--wide", shape === "wide");
+				// the cover's sizes for its new shape, worked out per photo at build time
+				const img = tile.querySelector("img");
+				const sizes = JSON.parse(img?.dataset.sizes ?? "{}") as Record<string, string>;
+				if (img && sizes[shape]) img.sizes = sizes[shape];
+				if (animate) {
+					tile.classList.remove("is-entering");
+					void tile.offsetWidth;
+					tile.style.setProperty("--enter-delay", `${Math.min(shown, 10) * 35}ms`);
+					tile.classList.add("is-entering");
+				}
+				shown++;
+			}
+			for (const filter of filters) {
+				const active = (filter.dataset.filter ?? "") === current;
+				filter.classList.toggle("is-active", active);
+				if (active) filter.setAttribute("aria-current", "true");
+				else filter.removeAttribute("aria-current");
+			}
+			if (status) {
+				const name = filters.find((f) => f.dataset.filter === current)?.dataset.filterName;
+				status.textContent =
+					`SHOWING ${pad(shown)} OF ${pad(tiles.length)}` + (current && name ? ` · ${name}` : "");
+			}
+		};
+
+		for (const filter of filters) {
+			filter.addEventListener("click", (e) => {
+				if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+				e.preventDefault();
+				const key = filter.dataset.filter ?? "";
+				// clicking the active collection again goes back to everything
+				apply(key === current ? "" : key, true);
+
+				const url = new URL(location.href);
+				if (current) url.searchParams.set("collection", current);
+				else url.searchParams.delete("collection");
+				history.replaceState(history.state, "", url);
+
+				// bring the grid into view if the change happened below the fold
+				if (status && status.getBoundingClientRect().top > window.innerHeight * 0.75) {
+					const lenis = (window as any).__lenis;
+					if (lenis) lenis.scrollTo(status, { offset: -96 });
+					else status.scrollIntoView({ behavior: "smooth", block: "start" });
+				}
+			});
+		}
+
+		apply(new URLSearchParams(location.search).get("collection") ?? "", false);
+	}
+
+	bindCollectionFilter();
+	document.addEventListener("astro:after-swap", bindCollectionFilter);
+</script>
 
 <style>
 	.hero-strip {
@@ -130,6 +292,7 @@ const stats = {
 	.kicker {
 		opacity: 0.5;
 		font-size: 0.7rem;
+		font-weight: 400;
 		margin: 0;
 	}
 
@@ -177,10 +340,145 @@ const stats = {
 		margin-top: var(--space-3);
 	}
 
+	/* ---- collections ---- */
+	.collections {
+		padding: 0 var(--gutter) var(--space-4);
+		background: var(--bone);
+	}
+
+	.collections__inner {
+		max-width: var(--max-w);
+		margin: 0 auto;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-2);
+	}
+
+	.collections__head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: var(--space-2);
+	}
+
+	.filter-all {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.55rem 0.85rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.18em;
+		border: 1px solid var(--rule-strong);
+		color: var(--ink);
+		transition: background 0.25s ease, color 0.25s ease;
+	}
+
+	.filter-all:hover,
+	.filter-all.is-active {
+		background: var(--ink);
+		color: var(--bone);
+	}
+
+	.filter-all__count {
+		opacity: 0.55;
+	}
+
+	.collections__list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+		gap: var(--space-3);
+	}
+
+	.collection {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		aspect-ratio: 3 / 1;
+		background: var(--ink);
+		color: var(--bone);
+	}
+
+	.collection__img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center 30%;
+		filter: grayscale(0.15);
+		transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.1, 1), filter 0.6s ease;
+	}
+
+	.collection:hover .collection__img {
+		transform: scale(1.03);
+		filter: grayscale(0);
+	}
+
+	.collection__veil {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(to top, rgba(10, 9, 8, 0.78), rgba(10, 9, 8, 0) 65%);
+	}
+
+	.collection__name {
+		position: absolute;
+		left: var(--space-3);
+		bottom: var(--space-3);
+		font-size: clamp(2rem, 6vw, 5rem);
+		letter-spacing: 0.08em;
+		line-height: 1;
+		transition: color 0.3s ease;
+	}
+
+	.collection__meta {
+		position: absolute;
+		right: var(--space-3);
+		bottom: var(--space-3);
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.3rem;
+		font-size: 0.65rem;
+		letter-spacing: 0.18em;
+	}
+
+	/* active collection: acid name plus a bar that wipes in along the bottom */
+	.collection::after {
+		content: "";
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 4px;
+		background: var(--acid);
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform 0.5s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.collection.is-active::after {
+		transform: scaleX(1);
+	}
+
+	.collection.is-active .collection__name {
+		color: var(--acid);
+	}
+
 	/* ---- collection grid ---- */
 	.section {
-		padding: var(--space-5) var(--gutter) var(--space-8);
+		padding: var(--space-4) var(--gutter) var(--space-8);
 		background: var(--bone);
+	}
+
+	.grid-status {
+		max-width: var(--max-w);
+		margin: 0 auto var(--space-3);
+		font-size: 0.65rem;
+		letter-spacing: 0.18em;
+		opacity: 0.55;
 	}
 
 	/* ---- standard grid (all pieces, featured first) ---- */
@@ -200,12 +498,27 @@ const stats = {
 		grid-column: span 2;
 	}
 
+	.tile[hidden] {
+		display: none;
+	}
+
 	.tile--tall {
 		grid-row: span 2;
 	}
 
 	.tile--wide {
 		grid-column: span 3;
+	}
+
+	.tile.is-entering {
+		animation: tile-in 0.6s cubic-bezier(0.2, 0.7, 0.1, 1) var(--enter-delay, 0ms) both;
+	}
+
+	@keyframes tile-in {
+		from {
+			opacity: 0;
+			transform: translateY(14px);
+		}
 	}
 
 	.tile__link {
@@ -291,6 +604,16 @@ const stats = {
 		font-size: 0.6rem;
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.tile.is-entering {
+			animation: none;
+		}
+		.collection__img,
+		.collection::after {
+			transition: none;
+		}
+	}
+
 	@media (max-width: 1100px) {
 		.grid {
 			grid-template-columns: repeat(4, 1fr);
@@ -312,11 +635,16 @@ const stats = {
 		.stats {
 			gap: var(--space-3);
 		}
-		.available-grid--hero-pair {
-			grid-template-columns: minmax(0, 1fr);
+		.collection {
+			aspect-ratio: 4 / 3;
 		}
-		.empty {
-			padding: var(--space-5) var(--space-3);
+		.collection__name {
+			left: var(--space-2);
+			bottom: var(--space-2);
+		}
+		.collection__meta {
+			right: var(--space-2);
+			bottom: var(--space-2);
 		}
 	}
 </style>

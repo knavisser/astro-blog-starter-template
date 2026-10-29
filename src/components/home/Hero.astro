@@ -1,24 +1,71 @@
 ---
-import { SITE_TITLE, ATELIER_LABEL, ATELIER_COORDS } from "../../consts";
+import { Image, getImage } from "astro:assets";
+import {
+	SITE_TITLE,
+	ATELIER_LABEL,
+	ATELIER_COORDS,
+	HERO_PHOTOS,
+	HERO_PHOTOS_MOBILE,
+	HERO_MOBILE_MEDIA,
+	HERO_MOBILE_BOXES,
+	PHOTO_WIDTHS,
+	objectLabel,
+} from "../../consts";
+import { hoodies, getHomePagePhoto } from "../../lib/hoodies";
+import { coverSizes } from "../../lib/cover-sizes";
 import BadJujuLogo from "../BadJujuLogo.astro";
 
-interface Props {
-	image?: string;
-	imageAlt?: string;
-}
-
-const {
-	image = "/images/hoodie2.jpg",
-	imageAlt = "OBJECT 002, twin horn hoodie",
-} = Astro.props;
+const wide = HERO_PHOTOS.map((ref) => getHomePagePhoto(ref));
+// upright phones and tablets get their own photos; the browser only fetches the ones it shows
+const upright = await Promise.all(
+	HERO_PHOTOS_MOBILE.map(async ({ photo, x = 50 }) => {
+		const { hoodie, image } = getHomePagePhoto(photo);
+		const { srcSet } = await getImage({ src: image, widths: PHOTO_WIDTHS });
+		return { hoodie, image, x, srcSet: srcSet.attribute, sizes: coverSizes(image.width / image.height, HERO_MOBILE_BOXES) };
+	})
+);
+// Slide i shows wide[i] on wide screens and upright[i] on upright ones. When
+// one list is longer, its extra slides sit out on the other kind of screen.
+const slides = Array.from({ length: Math.max(wide.length, upright.length) }, (_, i) => ({ w: wide[i], u: upright[i] }));
+const total = String(hoodies.length).padStart(3, "0");
 ---
 
-<section class="hero" data-cursor="sigil" data-cursor-label="OBJ 002">
-	<img class="hero__img" src={image} alt={imageAlt} fetchpriority="high" decoding="async" />
+<section class="hero" data-cursor="sigil" data-cursor-label={`OBJ ${wide[0].hoodie.id}`} data-mobile-media={HERO_MOBILE_MEDIA}>
+	<div class="hero__slides">
+		{
+			slides.map(({ w, u }, i) => (
+				<picture
+					class:list={[
+						"hero__slide",
+						{ "is-showing": i === 0, "hero__slide--wide-only": upright.length > 0 && !u, "hero__slide--upright-only": !w },
+					]}
+					style={u && `--mobile-x: ${u.x}%`}
+					aria-hidden={i === 0 ? undefined : "true"}
+					data-hero-slide
+					data-id={(w ?? u).hoodie.id}
+					data-alt={objectLabel((w ?? u).hoodie.number)}
+					data-mobile-id={(u ?? w).hoodie.id}
+					data-mobile-alt={objectLabel((u ?? w).hoodie.number)}
+				>
+					{u && <source media={HERO_MOBILE_MEDIA} srcset={u.srcSet} sizes={u.sizes} />}
+					<Image
+						class="hero__img"
+						src={(w ?? u).image}
+						alt={objectLabel((w ?? u).hoodie.number)}
+						widths={PHOTO_WIDTHS}
+						sizes="100vw"
+						loading={i === 0 ? "eager" : "lazy"}
+						fetchpriority={i === 0 ? "high" : "auto"}
+						decoding="async"
+					/>
+				</picture>
+			))
+		}
+	</div>
 	<div class="hero__veil" aria-hidden="true"></div>
 
 	<div class="hero__top mono">
-		<span class="hero__index">///OBJ 002 / 012</span>
+		<span class="hero__index">///OBJ <span class="hero__id-wide">{wide[0].hoodie.id}</span><span class="hero__id-mobile">{(upright[0] ?? wide[0]).hoodie.id}</span> / {total}</span>
 		<span class="hero__season">CYCLE I · MTO</span>
 	</div>
 
@@ -29,7 +76,10 @@ const {
 					<BadJujuLogo mode="solid" class="hero__logo-fill" />
 					<BadJujuLogo mode="solid" class="hero__logo-border" />
 				</span>
-				<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
+				<div class="hero__word">
+					<h1 class="display hero__wordmark">{SITE_TITLE}</h1>
+					<span class="display hero__wordmark hero__wordmark-edge" aria-hidden="true">{SITE_TITLE}</span>
+				</div>
 			</div>
 			<p class="mono hero__sub">stitched to be summoned · one of one</p>
 		</div>
@@ -47,24 +97,16 @@ const {
 </section>
 
 <script>
+	const SLIDE_MS = 6000; // from one hero photo to the next
+	const SLIDE_MOVE_MS = 1200; // the transform transition on .hero__slide
+
 	function bindHeroParallax() {
 		const hero = document.querySelector(".hero") as HTMLElement | null;
-		const img = hero?.querySelector(".hero__img") as HTMLImageElement | null;
-		if (!hero || !img) return;
+		const imgs = Array.from(hero?.querySelectorAll<HTMLImageElement>(".hero__img") ?? []);
+		if (!hero || !imgs.length) return;
 		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
 		const isMobile = window.matchMedia("(max-width: 720px)").matches;
-
-		// Mobile framing: squarer aspect ratios (iPhone SE @ 375×667 ≈ 0.56)
-		// need to nudge the hoodie right; tall phones (≈9:16 ≈ 0.46) center it.
-		// Linearly interpolate object-position X between those anchors, clamped.
-		const applyMobileFraming = () => {
-			if (!isMobile) return;
-			const aspect = window.innerWidth / window.innerHeight;
-			const x = Math.max(50, Math.min(65, 50 + (aspect - 0.46) * 100));
-			img.style.objectPosition = `${x.toFixed(1)}% 50%`;
-		};
-		applyMobileFraming();
 
 		let ticking = false;
 		const tick = isMobile
@@ -77,7 +119,7 @@ const {
 					// cap the parallax at -7% so the image bottom hugs the container
 					// edge instead of revealing background past it.
 					const ty = progress * -7;
-					img.style.transform = `translate3d(0, ${ty.toFixed(2)}%, 0)`;
+					imgs.forEach((img) => (img.style.transform = `translate3d(0, ${ty.toFixed(2)}%, 0)`));
 					ticking = false;
 				}
 			: () => {
@@ -86,7 +128,7 @@ const {
 					const scrolled = Math.max(0, -rect.top);
 					const progress = Math.min(1, total > 0 ? scrolled / total : 0);
 					const pos = 8 + (62 - 8) * progress;
-					img.style.objectPosition = `center ${pos.toFixed(2)}%`;
+					imgs.forEach((img) => (img.style.objectPosition = `center ${pos.toFixed(2)}%`));
 					ticking = false;
 				};
 		const onScroll = () => {
@@ -96,19 +138,127 @@ const {
 			}
 		};
 		window.addEventListener("scroll", onScroll, { passive: true });
-		window.addEventListener(
-			"resize",
-			() => {
-				applyMobileFraming();
-				onScroll();
-			},
-			{ passive: true }
-		);
+		window.addEventListener("resize", onScroll, { passive: true });
 		tick();
 	}
 
+	// The hero slides through its photos, one every SLIDE_MS: HERO_PHOTOS on wide
+	// screens, HERO_PHOTOS_MOBILE on upright phones and tablets (in consts.ts).
+	// The object number, alt text and cursor label follow the photo showing.
+	let stopSlides = () => {};
+	function bindHeroSlides() {
+		stopSlides();
+		const hero = document.querySelector<HTMLElement>(".hero");
+		const slides = Array.from(hero?.querySelectorAll<HTMLElement>("[data-hero-slide]") ?? []);
+		if (!hero || !slides.length) return;
+		const wideNumber = hero.querySelector<HTMLElement>(".hero__id-wide");
+		const uprightNumber = hero.querySelector<HTMLElement>(".hero__id-mobile");
+		const upright = window.matchMedia(hero.dataset.mobileMedia ?? "not all");
+		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const root = document.documentElement;
+		let current = 0;
+		let timer = 0;
+		let moved = 0;
+		let onScreen = true;
+
+		// a slide with no photo for this kind of screen is display: none
+		const usable = (slide: HTMLElement) => slide.getClientRects().length > 0;
+
+		const label = () => {
+			const { id = "", mobileId = "" } = slides[current].dataset;
+			if (wideNumber) wideNumber.textContent = id;
+			if (uprightNumber) uprightNumber.textContent = mobileId;
+			hero.dataset.cursorLabel = `OBJ ${upright.matches ? mobileId : id}`;
+			slides.forEach((slide) => {
+				const img = slide.querySelector("img");
+				const alt = upright.matches ? slide.dataset.mobileAlt : slide.dataset.alt;
+				if (img && alt) img.alt = alt;
+			});
+		};
+
+		const show = (k: number) => {
+			if (k === current) return;
+			slides.forEach((slide, i) => {
+				slide.classList.toggle("is-showing", i === k);
+				// the one going out slides off to the left as the new one comes in
+				slide.classList.toggle("is-leaving", i === current);
+				if (i === k) slide.removeAttribute("aria-hidden");
+				else slide.setAttribute("aria-hidden", "true");
+			});
+			const gone = current;
+			current = k;
+			label();
+			window.clearTimeout(moved);
+			moved = window.setTimeout(() => slides[gone].classList.remove("is-leaving"), SLIDE_MOVE_MS);
+		};
+
+		const loaded = (slide: HTMLElement) => {
+			const img = slide.querySelector("img");
+			return !!img && img.complete && img.naturalWidth > 0;
+		};
+
+		const schedule = () => {
+			window.clearTimeout(timer);
+			timer = window.setTimeout(() => {
+				const after = [...slides.slice(current + 1), ...slides.slice(0, current)];
+				const next = slides.indexOf(after.find(usable) ?? slides[current]);
+				// hold while the intro is up, the hero is scrolled away, the tab is
+				// hidden, or the next photo hasn't arrived yet
+				const introUp = root.classList.contains("intro-active");
+				if (onScreen && !document.hidden && !introUp && next !== current && loaded(slides[next])) show(next);
+				schedule();
+			}, SLIDE_MS);
+		};
+
+		// The other photos wait off screen, where lazy loading would never fetch
+		// them. Fetch the ones this screen slides through; each <picture> picks
+		// the wide or the upright file.
+		const fetchSlides = () => {
+			if (reduced) return;
+			slides.filter(usable).forEach((slide) => slide.querySelector("img")?.setAttribute("loading", "eager"));
+		};
+
+		// turning a tablet: carry on from a slide this kind of screen has
+		const onUpright = () => {
+			if (!usable(slides[current])) {
+				const k = slides.findIndex(usable);
+				if (k !== -1) show(k);
+			}
+			fetchSlides();
+			label();
+		};
+
+		// the first photo gets a full turn once the intro has handed off to it
+		const intro = new MutationObserver(() => {
+			if (root.classList.contains("intro-active")) return;
+			intro.disconnect();
+			if (!reduced) schedule();
+		});
+		const io = new IntersectionObserver(([entry]) => (onScreen = entry.isIntersecting));
+
+		label();
+		fetchSlides();
+		upright.addEventListener("change", onUpright);
+		io.observe(hero);
+		if (root.classList.contains("intro-active")) intro.observe(root, { attributes: true, attributeFilter: ["class"] });
+		if (!reduced && slides.length > 1) schedule();
+
+		stopSlides = () => {
+			window.clearTimeout(timer);
+			window.clearTimeout(moved);
+			intro.disconnect();
+			io.disconnect();
+			upright.removeEventListener("change", onUpright);
+		};
+	}
+
 	bindHeroParallax();
-	document.addEventListener("astro:after-swap", bindHeroParallax);
+	bindHeroSlides();
+	document.addEventListener("astro:before-swap", () => stopSlides());
+	document.addEventListener("astro:after-swap", () => {
+		bindHeroParallax();
+		bindHeroSlides();
+	});
 </script>
 
 <style>
@@ -124,6 +274,36 @@ const {
 		background: var(--ink);
 	}
 
+	/* The hero photos take turns: the one showing sits in frame, the next waits
+	   off to the right and slides in as the current one slides out to the left. */
+	.hero__slides {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+	}
+
+	.hero__slide {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		visibility: hidden;
+		transform: translateX(100%);
+	}
+
+	.hero__slide.is-showing,
+	.hero__slide.is-leaving {
+		visibility: visible;
+		transition: transform 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+
+	.hero__slide.is-showing {
+		transform: none;
+	}
+
+	.hero__slide.is-leaving {
+		transform: translateX(-100%);
+	}
+
 	.hero__img {
 		position: absolute;
 		inset: 0;
@@ -131,8 +311,11 @@ const {
 		height: 100%;
 		object-fit: cover;
 		object-position: center 8%;
-		filter: grayscale(0.15) saturate(0.92);
-		transform: scale(1.02);
+		filter: grayscale(0.05) saturate(0.95);
+	}
+
+	/* the photo the page opens on develops in with a slow zoom */
+	.hero__slide:first-child .hero__img {
 		animation: hero-zoom 14s cubic-bezier(0.2, 0.7, 0.1, 1) forwards;
 	}
 
@@ -222,23 +405,29 @@ const {
 		mix-blend-mode: exclusion;
 	}
 
-	/* border: a thin, true-white glowing outline (not blended), stacked on top */
+	/* border: a true-white glowing outline (not blended), stacked on top, with a
+	   faint white wash so the inverted fill never sinks into a mid-tone photo */
 	.hero__logo :global(.hero__logo-border) {
 		position: absolute;
 		top: 0;
 		left: 0;
 		pointer-events: none;
-		filter: drop-shadow(0 0 1px #ffffff)
-			drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+		filter: drop-shadow(0 0 1.5px #ffffff)
+			drop-shadow(0 0 7px rgba(255, 255, 255, 0.75));
 	}
 
 	.hero__logo :global(.hero__logo-border path) {
-		fill: none;
+		fill: rgba(255, 255, 255, 0.12);
 		stroke: #ffffff;
-		stroke-width: 1.5;
+		stroke-width: 2;
 		vector-effect: non-scaling-stroke;
 	}
 
+	.hero__word {
+		position: relative;
+	}
+
+	/* the fill inverts whatever photo is behind it (difference blend) */
 	.hero__wordmark {
 		margin: 0;
 		font-size: clamp(2.5rem, 9.5vw, 9.5rem);
@@ -253,10 +442,48 @@ const {
 			0 0 4px rgba(255, 255, 255, 0.7);
 	}
 
+	/* The same letters again on top, not blended: the logo's white glowing
+	   outline and faint wash, so the letters read on any photo. Outline and glow
+	   scale with the letters, so smaller letters keep their inverted fill. */
+	.hero__wordmark.hero__wordmark-edge {
+		position: absolute;
+		inset: 0;
+		mix-blend-mode: normal;
+		color: rgba(255, 255, 255, 0.12);
+		-webkit-text-stroke: clamp(1.2px, 0.11vw, 1.6px) #ffffff;
+		text-shadow: none;
+		filter: drop-shadow(0 0 1.5px #ffffff) drop-shadow(0 0 clamp(3px, 0.48vw, 7px) rgba(255, 255, 255, 0.75));
+		pointer-events: none;
+	}
+
 	.hero__sub {
 		margin: 0;
 		font-size: 0.7rem;
 		opacity: 0.78;
+	}
+
+	/* the object number follows the photo showing (same query as HERO_MOBILE_MEDIA) */
+	.hero__id-mobile {
+		display: none;
+	}
+
+	/* a slide with no photo for this kind of screen sits out (and never loads) */
+	@media (max-width: 1024px) and (orientation: portrait) {
+		.hero__id-wide {
+			display: none;
+		}
+		.hero__id-mobile {
+			display: inline;
+		}
+		.hero__slide--wide-only {
+			display: none;
+		}
+	}
+
+	@media (min-width: 1025px), (orientation: landscape) {
+		.hero__slide--upright-only {
+			display: none;
+		}
 	}
 
 	.hero__bottom-right {
@@ -318,21 +545,32 @@ const {
 		.hero__img {
 			width: calc(100% + 36px);
 			height: 107%;
-			object-position: 50% 50%;
-			animation: none;
+			/* the upright photo's x from HERO_PHOTOS_MOBILE, set on its slide */
+			object-position: var(--mobile-x, 50%) 50%;
 			will-change: transform;
-			filter: grayscale(0.05) saturate(0.95);
+		}
+		.hero__slide:first-child .hero__img {
+			animation: none;
 		}
 		.hero__wordmark {
 			word-spacing: 100vw;
 			line-height: 0.95;
 			-webkit-text-stroke: 2px currentColor;
 		}
+		.hero__wordmark.hero__wordmark-edge {
+			color: transparent;
+			-webkit-text-stroke-width: 1.4px;
+			filter: drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.hero__img {
+		.hero__slide:first-child .hero__img {
 			animation: none;
+		}
+		/* no sliding, so the other photos never show; this also keeps them from loading */
+		.hero__slide:not(:first-child) {
+			display: none;
 		}
 		.hero__scroll {
 			animation: none;

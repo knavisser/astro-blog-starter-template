@@ -200,3 +200,7 @@ dist
 
 ### Astro ###
 .astro/
+
+# Full-size photo originals (hundreds of MB). Only the web-size copies that
+# `npm run photos` writes to src/assets/ are committed.
+/photos/

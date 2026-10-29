@@ -1,30 +1,40 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getCollection } from "astro:content";
+import { Image, getImage } from "astro:assets";
 import type { GetStaticPaths } from "astro";
 import Icon from "../../components/Icon.astro";
-import { objectLabel } from "../../consts";
+import { SITE_TITLE, PHOTO_WIDTHS, objectLabel } from "../../consts";
+import { hoodies, collectionOf, type HoodieEntry } from "../../lib/hoodies";
+import { coverSizes } from "../../lib/cover-sizes";
 
-export const getStaticPaths: GetStaticPaths = async () => {
-	const pieces = await getCollection("pieces");
-	return pieces.map((piece) => ({
-		params: { slug: piece.id },
-		props: { piece },
+export const getStaticPaths: GetStaticPaths = () =>
+	hoodies.map((hoodie) => ({
+		params: { slug: hoodie.id },
+		props: { hoodie },
 	}));
-};
 
-const { piece } = Astro.props;
-const { data } = piece;
-const completed = data.dateCompleted
-	? data.dateCompleted.toISOString().slice(0, 10)
-	: null;
+interface Props {
+	hoodie: HoodieEntry;
+}
+
+const { hoodie } = Astro.props;
+const label = objectLabel(hoodie.number);
+const collection = collectionOf(hoodie);
+const [cover, ...rest] = hoodie.photos;
+const total = hoodie.photos.length;
+// the lead photo sits in a 4:5 box; a wider photo is cropped and drawn wider than it
+const coverSizesAttr = coverSizes(cover.width / cover.height, [
+	{ media: "(max-width: 800px)", width: "100vw", ratio: 4 / 5 },
+	{ width: "50vw", ratio: 4 / 5 },
+]);
+
+const shareImage = await getImage({ src: hoodie.cover, width: 1200, format: "jpg" });
+const description = collection
+	? `${label}, a one of one hoodie from the ${collection.name} collection by ${SITE_TITLE}.`
+	: `${label}, a one of one hoodie by ${SITE_TITLE}.`;
 ---
 
-<Base
-	title={objectLabel(data.index)}
-	description={data.summary}
-	image={data.heroImage}
->
+<Base title={label} description={description} image={shareImage.src}>
 	<article class="piece">
 		<div class="piece__top">
 			<a class="back mono" href="/portfolio" data-cursor="link">
@@ -36,47 +46,240 @@ const completed = data.dateCompleted
 		<section class="lead">
 			<div class="lead__inner">
 				<p class="mono kicker">/// ONE OF ONE</p>
-				<h1 class="display name">{objectLabel(data.index)}</h1>
-				<p class="summary">{data.summary}</p>
+				<h1 class="display name">{label}</h1>
 
 				<dl class="spec mono">
 					<div>
 						<dt>// STATUS</dt>
-						<dd>{data.status.toUpperCase()}</dd>
+						<dd>{hoodie.status.toUpperCase()}</dd>
 					</div>
 					<div>
-						<dt>// SPECIES</dt>
-						<dd>{data.earStyle.toUpperCase()}</dd>
+						<dt>// COMPLETED</dt>
+						<dd>{hoodie.completed ?? "—"}</dd>
 					</div>
-					{
-						completed && (
-							<div>
-								<dt>// COMPLETED</dt>
-								<dd>{completed}</dd>
-							</div>
-						)
-					}
 					<div>
-						<dt>// MATERIALS</dt>
+						<dt>// COLLECTION</dt>
 						<dd>
-							{data.materials.map((m: string, i: number) => (
-								<span>{m}{i < data.materials.length - 1 ? " · " : ""}</span>
-							))}
+							{
+								collection ? (
+									<a
+										class="spec__link"
+										href={`/portfolio?collection=${collection.key}`}
+										data-cursor="link"
+									>
+										{collection.name}
+									</a>
+								) : (
+									"—"
+								)
+							}
 						</dd>
 					</div>
 				</dl>
 			</div>
 
-			<figure class="lead__figure">
-				<img
-					src={data.heroImage}
-					alt={objectLabel(data.index)}
+			<button
+				type="button"
+				class="lead__figure"
+				data-photo="0"
+				data-cursor="zoom"
+				data-cursor-label="VIEW"
+				aria-label={`Open photo 1 of ${total}`}
+			>
+				<Image
+					src={cover}
+					alt={`${label}, photo 1 of ${total}`}
+					widths={PHOTO_WIDTHS}
+					sizes={coverSizesAttr}
+					loading="eager"
 					fetchpriority="high"
 				/>
-			</figure>
+			</button>
 		</section>
+
+		{
+			rest.length > 0 && (
+				<section class="gallery" aria-label="Photos">
+					<ul class="gallery__rows">
+						{rest.map((photo, i) => (
+							<li class="gallery__item" style={`--ar: ${(photo.width / photo.height).toFixed(4)}`}>
+								<button
+									type="button"
+									class="gallery__btn"
+									data-photo={i + 1}
+									data-cursor="zoom"
+									data-cursor-label="VIEW"
+									aria-label={`Open photo ${i + 2} of ${total}`}
+								>
+									<Image
+										src={photo}
+										alt={`${label}, photo ${i + 2} of ${total}`}
+										widths={PHOTO_WIDTHS}
+										sizes="(max-width: 720px) 100vw, 50vw"
+									/>
+								</button>
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
 	</article>
+
+	<dialog class="lightbox" data-lightbox aria-label={`${label} photos`}>
+		<img class="lightbox__img" data-lightbox-img alt="" />
+		<p class="mono lightbox__count" data-lightbox-count aria-live="polite"></p>
+		<button
+			type="button"
+			class="lightbox__btn lightbox__close"
+			data-lightbox-close
+			data-cursor="link"
+			aria-label="Close"
+		>
+			<Icon name="x" size={20} />
+		</button>
+		{
+			total > 1 && (
+				<>
+					<button
+						type="button"
+						class="lightbox__btn lightbox__prev"
+						data-lightbox-prev
+						data-cursor="link"
+						aria-label="Previous photo"
+					>
+						<Icon name="arrow-left" size={20} />
+					</button>
+					<button
+						type="button"
+						class="lightbox__btn lightbox__next"
+						data-lightbox-next
+						data-cursor="link"
+						aria-label="Next photo"
+					>
+						<Icon name="arrow-right" size={20} />
+					</button>
+				</>
+			)
+		}
+	</dialog>
 </Base>
+
+<script>
+	function bindLightbox() {
+		const dialog = document.querySelector<HTMLDialogElement>("[data-lightbox]");
+		const view = dialog?.querySelector<HTMLImageElement>("[data-lightbox-img]");
+		const count = dialog?.querySelector<HTMLElement>("[data-lightbox-count]");
+		if (!dialog || !view || !count) return;
+
+		const triggers = Array.from(document.querySelectorAll<HTMLElement>("[data-photo]")).sort(
+			(a, b) => Number(a.dataset.photo) - Number(b.dataset.photo)
+		);
+		const pad = (n: number) => String(n).padStart(2, "0");
+		let index = 0;
+		let isOpen = false;
+		let cursorHome: Node = document.body;
+
+		const show = (i: number) => {
+			index = (i + triggers.length) % triggers.length;
+			const source = triggers[index].querySelector("img");
+			if (!source) return;
+			// Show the file that's already on screen straight away, then let the
+			// browser swap in a sharper one sized for the viewer.
+			view.removeAttribute("srcset");
+			view.src = source.currentSrc || source.src;
+			view.alt = source.alt;
+			// Fix the display size up front (same limits as the CSS max sizes), so
+			// the photo doesn't jump when the sharper file arrives.
+			const ratio = (source.naturalWidth || 4) / (source.naturalHeight || 5);
+			const shown = Math.max(1, Math.round(Math.min(window.innerWidth - 32, (window.innerHeight - 128) * ratio)));
+			view.style.width = `${shown}px`;
+			view.sizes = `${shown}px`;
+			requestAnimationFrame(() => (view.srcset = source.srcset));
+			count.textContent = `${pad(index + 1)} / ${pad(triggers.length)}`;
+		};
+
+		const open = (i: number) => {
+			show(i);
+			if (!isOpen) {
+				isOpen = true;
+				// The custom cursor lives in <body>, below the modal's top layer.
+				// Bring it along so it stays visible over the photo.
+				const cursor = document.getElementById("cursor");
+				if (cursor?.parentNode && cursor.parentNode !== dialog) {
+					cursorHome = cursor.parentNode;
+					dialog.append(cursor);
+				}
+				(window as any).__lenis?.stop();
+				document.documentElement.classList.add("lightbox-open");
+			}
+			if (!dialog.open) dialog.showModal();
+		};
+
+		// Undo everything open() did. Runs as the viewer closes rather than on
+		// the "close" event, which the browser may deliver a frame later.
+		const restore = () => {
+			if (!isOpen) return;
+			isOpen = false;
+			const cursor = document.getElementById("cursor");
+			if (cursor?.parentNode === dialog) cursorHome.appendChild(cursor);
+			(window as any).__lenis?.start();
+			document.documentElement.classList.remove("lightbox-open");
+		};
+
+		const close = () => {
+			restore();
+			dialog.close();
+		};
+
+		// Escape fires "cancel" right away; "close" covers anything else
+		dialog.addEventListener("cancel", restore);
+		dialog.addEventListener("close", restore);
+
+		triggers.forEach((trigger) =>
+			trigger.addEventListener("click", () => open(Number(trigger.dataset.photo)))
+		);
+		dialog.querySelector("[data-lightbox-prev]")?.addEventListener("click", () => show(index - 1));
+		dialog.querySelector("[data-lightbox-next]")?.addEventListener("click", () => show(index + 1));
+		dialog.querySelector("[data-lightbox-close]")?.addEventListener("click", close);
+
+		dialog.addEventListener("keydown", (e) => {
+			if (e.key === "ArrowLeft") show(index - 1);
+			if (e.key === "ArrowRight") show(index + 1);
+		});
+
+		// swipe between photos on touch screens
+		let startX = 0;
+		let startY = 0;
+		let swiped = false;
+		dialog.addEventListener("pointerdown", (e) => {
+			startX = e.clientX;
+			startY = e.clientY;
+			swiped = false;
+		});
+		dialog.addEventListener("pointerup", (e) => {
+			if (e.pointerType === "mouse" || triggers.length < 2) return;
+			const dx = e.clientX - startX;
+			const dy = e.clientY - startY;
+			if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+				swiped = true;
+				show(index + (dx < 0 ? 1 : -1));
+			}
+		});
+
+		// a click on the dark area around the photo closes the viewer
+		dialog.addEventListener("click", (e) => {
+			if (swiped) {
+				swiped = false;
+				return;
+			}
+			if (e.target === dialog) close();
+		});
+	}
+
+	bindLightbox();
+	document.addEventListener("astro:after-swap", bindLightbox);
+</script>
 
 <style>
 	.piece {
@@ -137,17 +340,9 @@ const completed = data.dateCompleted
 		line-height: 0.95;
 	}
 
-	.summary {
-		font-size: 1.05rem;
-		line-height: 1.55;
-		opacity: 0.78;
-		margin: 0;
-		max-width: 48ch;
-	}
-
 	.spec {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: var(--space-3);
 		margin: var(--space-3) 0 0;
 		font-size: 0.7rem;
@@ -163,7 +358,19 @@ const completed = data.dateCompleted
 		letter-spacing: 0.08em;
 	}
 
+	.spec__link {
+		border-bottom: 1px solid var(--rule-strong);
+		transition: border-color 0.25s ease, background 0.25s ease;
+	}
+
+	.spec__link:hover {
+		background: var(--acid);
+		border-color: var(--ink);
+	}
+
 	.lead__figure {
+		display: block;
+		width: 100%;
 		margin: 0;
 		aspect-ratio: 4 / 5;
 		overflow: hidden;
@@ -175,6 +382,154 @@ const completed = data.dateCompleted
 		height: 100%;
 		object-fit: cover;
 		object-position: center 28%;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.lead__figure:hover img {
+		transform: scale(1.03);
+	}
+
+	/* ---- gallery: justified rows, every photo uncropped ---- */
+	.gallery {
+		max-width: var(--max-w);
+		margin: 0 auto;
+	}
+
+	.gallery__rows {
+		--row-h: clamp(220px, 30vw, 460px);
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+	}
+
+	/* soaks up the leftover space so the last row keeps its natural size */
+	.gallery__rows::after {
+		content: "";
+		flex-grow: 999999;
+	}
+
+	.gallery__item {
+		flex-grow: calc(var(--ar) * 100);
+		flex-basis: calc(var(--ar) * var(--row-h));
+	}
+
+	.gallery__btn {
+		display: block;
+		width: 100%;
+		overflow: hidden;
+		background: var(--chrome-1);
+	}
+
+	.gallery__btn img {
+		width: 100%;
+		height: auto;
+		transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.1, 1);
+	}
+
+	.gallery__btn:hover img {
+		transform: scale(1.03);
+	}
+
+	/* ---- photo viewer ---- */
+	.lightbox {
+		width: 100vw;
+		height: 100dvh;
+		max-width: none;
+		max-height: none;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: rgba(10, 9, 8, 0.985);
+		color: var(--bone);
+		overflow: hidden;
+	}
+
+	.lightbox[open] {
+		display: grid;
+		place-items: center;
+		animation: lightbox-in 0.35s ease both;
+	}
+
+	.lightbox::backdrop {
+		background: transparent;
+	}
+
+	@keyframes lightbox-in {
+		from {
+			opacity: 0;
+		}
+	}
+
+	.lightbox__img {
+		max-width: calc(100vw - 2rem);
+		max-height: calc(100dvh - 8rem);
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		user-select: none;
+		-webkit-user-drag: none;
+	}
+
+	.lightbox__count {
+		position: absolute;
+		left: var(--gutter);
+		top: var(--space-3);
+		margin: 0;
+		font-size: 0.7rem;
+		letter-spacing: 0.18em;
+	}
+
+	.lightbox__btn {
+		position: absolute;
+		width: 48px;
+		height: 48px;
+		display: grid;
+		place-items: center;
+		border: 1px solid rgba(244, 241, 236, 0.35);
+		color: var(--bone);
+		transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+	}
+
+	.lightbox__btn:hover {
+		background: var(--acid);
+		border-color: var(--acid);
+		color: var(--ink);
+	}
+
+	.lightbox__close {
+		top: var(--space-2);
+		right: var(--gutter);
+	}
+
+	.lightbox__prev,
+	.lightbox__next {
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.lightbox__prev {
+		left: var(--gutter);
+	}
+
+	.lightbox__next {
+		right: var(--gutter);
+	}
+
+	:global(html.lightbox-open) {
+		overflow: hidden;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.lead__figure img,
+		.gallery__btn img {
+			transition: none;
+		}
+		.lightbox[open] {
+			animation: none;
+		}
 	}
 
 	@media (max-width: 800px) {
@@ -182,8 +537,20 @@ const completed = data.dateCompleted
 			grid-template-columns: 1fr;
 			padding-top: 0;
 		}
+	}
+
+	@media (max-width: 720px) {
 		.spec {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.gallery__item {
+			flex-basis: 100%;
+		}
+		.lightbox__prev,
+		.lightbox__next {
+			top: auto;
+			bottom: var(--space-3);
+			transform: none;
 		}
 	}
 </style>

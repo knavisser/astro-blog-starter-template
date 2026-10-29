@@ -1,30 +1,32 @@
 ---
-const looks = [
-	{
-		image: "/images/hoodie4.jpg",
-		caption: "OBJECT 004",
-		caption2: "ACID-WASH COTTON · DRACONID EARS · BLACK/WHITE LINING",
-		layout: "full",
-	},
-	{
-		image: "/images/hoodie7.jpg",
-		caption: "OBJECT 007",
-		caption2: "GRAPHITE STATIC DYE · TALL DOBERMAN EARS",
-		layout: "left",
-	},
-	{
-		image: "/images/hoodie1.jpg",
-		caption: "OBJECT 001",
-		caption2: "CAUTION-STRIPE BODY · JAGGED EARS · EMBROIDERED SIGIL",
-		layout: "right",
-	},
-	{
-		image: "/images/hoodie5.jpg",
-		caption: "OBJECT 005",
-		caption2: "BLEACHED COTTON · HAND-PAINTED WING · YELLOW MAW",
-		layout: "full",
-	},
+import { Image } from "astro:assets";
+import { objectLabel, PHOTO_WIDTHS } from "../../consts";
+import { getHomePagePhoto, collectionOf } from "../../lib/hoodies";
+
+// Photos from the NDSM shoot, as "<object number>/<file name>". `focus` moves
+// the crop's vertical focal point (default: 28% from the top).
+const layouts = [
+	{ photo: "2/_DSC9903.jpg", layout: "full" },
+	{ photo: "20/_DSC9601.jpg", layout: "left" },
+	{ photo: "14/BadJujuShoot-15.jpg", layout: "right" },
+	{ photo: "17/BadJujuShoot-26.jpg", layout: "full", focus: "12%" },
 ];
+
+const looks = layouts.map(({ photo, layout, focus }) => {
+	const { hoodie, image } = getHomePagePhoto(photo);
+	return {
+		image,
+		style: focus ? `object-position: center ${focus}` : undefined,
+		href: `/portfolio/${hoodie.id}`,
+		caption: objectLabel(hoodie.number),
+		caption2: [collectionOf(hoodie)?.name, hoodie.status.toUpperCase(), hoodie.completed]
+			.filter(Boolean)
+			.join(" · "),
+		// full-width looks span the page, the side-by-side ones take two thirds
+		sizes: layout === "full" ? "(max-width: 1680px) 100vw, 1680px" : "(max-width: 800px) 100vw, 66vw",
+		layout,
+	};
+});
 ---
 
 <section class="lookbook" id="lookbook">
@@ -41,12 +43,19 @@ const looks = [
 					data-reveal
 					style={`--i: ${i}`}
 				>
-					<div class="look__img-wrap">
-						<img class="look__img" src={look.image} alt={look.caption} loading="lazy" decoding="async" />
-					</div>
+					<a class="look__img-wrap" href={look.href} data-cursor="zoom" data-cursor-label="VIEW">
+						<Image
+							class="look__img"
+							src={look.image}
+							alt={look.caption}
+							widths={PHOTO_WIDTHS}
+							sizes={look.sizes}
+							style={look.style}
+						/>
+					</a>
 					<figcaption class="look__cap mono">
 						<span class="look__no">/// {String(i + 1).padStart(2, "0")}</span>
-						<span class="look__name">{look.caption}</span>
+						<a class="look__name" href={look.href} data-cursor="link">{look.caption}</a>
 						<span class="look__sub">{look.caption2}</span>
 					</figcaption>
 				</figure>
@@ -115,6 +124,7 @@ const looks = [
 	}
 
 	.look__img-wrap {
+		display: block;
 		overflow: hidden;
 		background: var(--chrome-1);
 		aspect-ratio: 4 / 5;

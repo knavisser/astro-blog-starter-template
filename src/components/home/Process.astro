@@ -1,32 +1,38 @@
 ---
+import { Image } from "astro:assets";
 import Cardinal from "../sigils/Cardinal.astro";
+import { PHOTO_WIDTHS } from "../../consts";
+import wip1 from "../../assets/other/Work in progress - fabric and ear construction/WIP1.jpg";
+import wip2 from "../../assets/other/Work in progress - fabric and ear construction/WIP2.jpg";
+import wip3 from "../../assets/other/Work in progress - black hoodie with red and white ears/WIP3.jpg";
+import wip4 from "../../assets/other/Work in progress - black hoodie with red and white ears/WIP4.jpg";
 
 const steps = [
 	{
 		numeral: "I",
 		label: "BASE",
-		image: "/images/WIP1.jpg",
+		image: wip1,
 		body:
 			"We source the hoodie together, or you bring your own. We talk the design through, then prep the base, with every wish mapped before a single cut is made.",
 	},
 	{
 		numeral: "II",
 		label: "CRAFT",
-		image: "/images/WIP2.jpg",
+		image: wip2,
 		body:
 			"The ears are cut by hand. Crop the hoodie for its own fabric, or build them from a fabric of your choosing, panels shaped and appliquéd piece by piece.",
 	},
 	{
 		numeral: "III",
 		label: "ASSEMBLE",
-		image: "/images/WIP3.jpg",
+		image: wip3,
 		body:
 			"Ears are lined, then sewn onto the hood and set by hand with studs and spikes. Pinned and fitted on the form until the silhouette holds.",
 	},
 	{
 		numeral: "IV",
 		label: "SUMMONED",
-		image: "/images/WIP4.jpg",
+		image: wip4,
 		body:
 			"Any last features are stitched in. The finished piece is packaged with care and sent out into the world, one of one, ready to be worn.",
 	},
@@ -45,7 +51,12 @@ const steps = [
 			steps.map((step) => (
 				<li class="step" data-reveal>
 					<figure class="step__figure">
-						<img src={step.image} alt={`${step.label} stage`} loading="lazy" decoding="async" />
+						<Image
+							src={step.image}
+							alt={`${step.label} stage`}
+							widths={PHOTO_WIDTHS}
+							sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 25vw"
+						/>
 					</figure>
 					<div class="step__body">
 						<div class="step__head">

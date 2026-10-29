@@ -42,8 +42,9 @@
 		"check": "astro build && tsc && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "astro dev",
-		"optimize:images": "node scripts/optimize-images.mjs",
-		"preview": "astro build && wrangler dev"
+		"photos": "node scripts/photos.mjs",
+		"preview": "astro build && wrangler dev",
+		"test": "node --test tests/"
 	},
 	"type": "module"
 }

@@ -3,6 +3,7 @@ import Base from "../layouts/Base.astro";
 import Intro from "../components/Intro.astro";
 import Hero from "../components/home/Hero.astro";
 import FeaturedDrop from "../components/home/FeaturedDrop.astro";
+import CollectionReel from "../components/home/CollectionReel.astro";
 import Manifesto from "../components/home/Manifesto.astro";
 import SummonCTA from "../components/home/SummonCTA.astro";
 import Process from "../components/home/Process.astro";
@@ -13,9 +14,22 @@ import ToastStack from "../components/ToastStack.astro";
 <Base>
 	<Intro />
 	<Hero />
-	<FeaturedDrop />
+	<FeaturedDrop collection="ndsm" />
 	<Manifesto />
 	<SummonCTA />
+	<CollectionReel
+		collection="ndsm"
+		frames={[
+			"13/BadJujuShoot-07.jpg",
+			"18/_DSC9833.jpg",
+			"21/_DSC9675.jpg",
+			"19/_DSC9541.jpg",
+			"16/BadJujuShoot-20.jpg",
+			"24/_DSC9780.jpg",
+			"15/BadJujuShoot-10.jpg",
+			"17/_DSC9867.jpg",
+		]}
+	/>
 	<Process />
 	<Lookbook />
 	<ToastStack />

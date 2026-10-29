@@ -6,6 +6,7 @@ import {
 	CONTACT_EMAIL,
 	SHOP_PRODUCTS_URL,
 } from "../consts";
+import Icon from "./Icon.astro";
 
 const year = new Date().getFullYear();
 ---
@@ -50,7 +51,11 @@ const year = new Date().getFullYear();
 	<div class="stripe mono">
 		<span>© {year} {SITE_TITLE.toUpperCase()}</span>
 		<span>ALL ONE OF ONE · NO RESTOCKS</span>
-		<span>BUILT IN THE LOWLANDS</span>
+		<a class="credit" href="https://tonyvisser.com" target="_blank" rel="noopener noreferrer" data-cursor="link">
+			<Icon name="code" size={13} />
+			Built by Tony Visser
+			<Icon name="arrow-up-right" size={11} />
+		</a>
 	</div>
 </footer>
 
@@ -140,10 +145,27 @@ const year = new Date().getFullYear();
 		gap: var(--space-3);
 		padding-top: var(--space-3);
 		font-size: 0.62rem;
-		opacity: 0.55;
 		flex-wrap: wrap;
 		max-width: var(--max-w);
 		margin: 0 auto;
+	}
+
+	/* dimmed one by one rather than as a whole, so the credit can light up */
+	.stripe > * {
+		opacity: 0.55;
+	}
+
+	.credit {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5em;
+		transition: opacity 0.2s ease, color 0.2s ease;
+	}
+
+	.credit:hover,
+	.credit:focus-visible {
+		opacity: 1;
+		color: var(--acid);
 	}
 
 	@media (max-width: 800px) {

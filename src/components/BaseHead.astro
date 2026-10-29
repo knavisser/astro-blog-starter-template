@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
-import { SITE_TITLE, SITE_DESCRIPTION } from "../consts";
+import { getImage } from "astro:assets";
+import { SITE_TITLE, SITE_DESCRIPTION, HERO_PHOTOS } from "../consts";
+import { getHomePagePhoto } from "../lib/hoodies";
 
 interface Props {
 	title?: string;
@@ -10,10 +12,13 @@ interface Props {
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
+// share previews default to the first hero photo, as a plain JPEG every platform reads
+const defaultImage = await getImage({ src: getHomePagePhoto(HERO_PHOTOS[0]).image, width: 1200, format: "jpg" });
+
 const {
 	title = SITE_TITLE,
 	description = SITE_DESCRIPTION,
-	image = "/images/hoodie2.jpg",
+	image = defaultImage.src,
 } = Astro.props;
 
 const fullTitle =

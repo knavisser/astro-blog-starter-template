@@ -18,6 +18,9 @@ export default defineConfig({
 		platformProxy: {
 			enabled: true,
 		},
+		// Every photo is resized with sharp at build time (all pages are
+		// prerendered); Cloudflare can't run sharp at request time.
+		imageService: "compile",
 	}),
 	vite: {
 		// Pre-bundle lenis on dev startup so it isn't lazily re-optimized

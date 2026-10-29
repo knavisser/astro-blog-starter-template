@@ -15,8 +15,18 @@
  * in the script below and the matching note in BaseHead.astro to replay it on
  * every load while tuning.
  */
+import { Image, getImage } from "astro:assets";
 import BadJujuLogo from "./BadJujuLogo.astro";
-import { objectLabel } from "../consts";
+import { HERO_PHOTOS, HERO_PHOTOS_MOBILE, HERO_MOBILE_MEDIA, HERO_MOBILE_BOXES, PHOTO_WIDTHS, objectLabel } from "../consts";
+import { getHoodie, getHomePagePhoto } from "../lib/hoodies";
+import { coverSizes } from "../lib/cover-sizes";
+
+// the hero's first photo for upright phones and tablets, asked for exactly as
+// Hero.astro asks for it, so the hand-off reuses the same file
+const [mobileHero] = HERO_PHOTOS_MOBILE;
+const mobileHeroImage = mobileHero && getHomePagePhoto(mobileHero.photo).image;
+const mobileHeroSrc = mobileHeroImage && (await getImage({ src: mobileHeroImage, widths: PHOTO_WIDTHS }));
+const mobileHeroSizes = mobileHeroImage && coverSizes(mobileHeroImage.width / mobileHeroImage.height, HERO_MOBILE_BOXES);
 
 // hoodie marquees — hidden for now (flip to true to bring them back)
 const SHOW_HOODIES = false;
@@ -39,7 +49,7 @@ const rightItems = [...rightNums, ...rightNums];
 					leftItems.map((n, i) => (
 						<figure class="intro__item" style={`--gd:${(i % 5) * 0.7}s`}>
 							<div class="intro__shot">
-								<img src={`/images/hoodie${n}.jpg`} alt="" />
+								<Image src={getHoodie(n).cover} alt="" widths={PHOTO_WIDTHS} sizes="260px" />
 								<svg
 									class="intro__frame"
 									viewBox="0 0 100 133"
@@ -70,7 +80,7 @@ const rightItems = [...rightNums, ...rightNums];
 					rightItems.map((n, i) => (
 						<figure class="intro__item" style={`--gd:${(i % 5) * 0.55}s`}>
 							<div class="intro__shot">
-								<img src={`/images/hoodie${n}.jpg`} alt="" />
+								<Image src={getHoodie(n).cover} alt="" widths={PHOTO_WIDTHS} sizes="260px" />
 								<svg
 									class="intro__frame"
 									viewBox="0 0 100 133"
@@ -100,7 +110,19 @@ const rightItems = [...rightNums, ...rightNums];
 
 	<div class="intro__scrim" aria-hidden="true"></div>
 	<div class="intro__hero" aria-hidden="true">
-		<img class="intro__hero-img" src="/images/hoodie2.jpg" alt="" fetchpriority="high" decoding="async" />
+		<picture style={`--mobile-x: ${mobileHero?.x ?? 50}%`}>
+			{mobileHeroSrc && <source media={HERO_MOBILE_MEDIA} srcset={mobileHeroSrc.srcSet.attribute} sizes={mobileHeroSizes} />}
+			<Image
+				class="intro__hero-img"
+				src={getHomePagePhoto(HERO_PHOTOS[0]).image}
+				alt=""
+				widths={PHOTO_WIDTHS}
+				sizes="100vw"
+				loading="eager"
+				fetchpriority="high"
+				decoding="async"
+			/>
+		</picture>
 		<div class="intro__hero-veil"></div>
 	</div>
 
@@ -153,8 +175,8 @@ const rightItems = [...rightNums, ...rightNums];
 		will-change: transform;
 	}
 
-	/* the photo mirrors .hero__img exactly (including the mobile object-position
-	   computed in JS), so the rising panel hands off to the real hero with no
+	/* the photo mirrors .hero__img exactly (same photo per screen, same mobile
+	   object-position), so the rising panel hands off to the real hero with no
 	   shift in framing */
 	.intro__hero-img {
 		position: absolute;
@@ -190,7 +212,8 @@ const rightItems = [...rightNums, ...rightNums];
 		.intro__hero-img {
 			width: calc(100% + 36px);
 			height: 107%;
-			object-position: 50% 50%;
+			/* the first upright photo's x from HERO_PHOTOS_MOBILE, set on the <picture> */
+			object-position: var(--mobile-x, 50%) 50%;
 		}
 	}
 
@@ -812,21 +835,6 @@ const rightItems = [...rightNums, ...rightNums];
 				? initMapDistort(mapCanvas, "/png/map_bg.jpg")
 				: null;
 
-		// mirror Hero.astro's responsive object-position on the rising hero panel
-		// so it lands exactly where the real hero img sits (no shift at handoff)
-		const heroImg = overlay.querySelector<HTMLImageElement>(".intro__hero-img");
-		function frameHeroImg() {
-			if (!heroImg) return;
-			if (!window.matchMedia("(max-width: 720px)").matches) {
-				heroImg.style.objectPosition = ""; // desktop: CSS center 8%
-				return;
-			}
-			const aspect = window.innerWidth / window.innerHeight;
-			const x = Math.max(50, Math.min(65, 50 + (aspect - 0.46) * 100));
-			heroImg.style.objectPosition = `${x.toFixed(1)}% 50%`;
-		}
-		frameHeroImg();
-
 		const stages: [number, string][] = [
 			[30, "is-stage-1"],
 			[500, "is-stage-2"],
@@ -873,7 +881,6 @@ const rightItems = [...rightNums, ...rightNums];
 		window.addEventListener("wheel", onWheel, { passive: false });
 		window.addEventListener("touchmove", onTouch, { passive: true });
 		window.addEventListener("pointermove", onPointerMove, { passive: true });
-		window.addEventListener("resize", frameHeroImg, { passive: true });
 		overlay.addEventListener("click", onClick);
 
 		// "wheel" effect: items scale up + fade in toward the vertical centre,
@@ -906,7 +913,6 @@ const rightItems = [...rightNums, ...rightNums];
 			window.removeEventListener("wheel", onWheel as EventListener);
 			window.removeEventListener("touchmove", onTouch);
 			window.removeEventListener("pointermove", onPointerMove);
-			window.removeEventListener("resize", frameHeroImg);
 			overlay.removeEventListener("click", onClick);
 		}
 
